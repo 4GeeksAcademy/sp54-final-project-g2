@@ -126,7 +126,7 @@ class Previsions(db.Model):
     user_to = db.relationship('Users', foreign_keys=[user_id])
 
     def __repr__(self):
-        return f'<Prevision: {self.id} - {self.center_id}>'
+        return f'<Prevision: {self.id} - Center: {self.center_id}>'
 
     def serialize(self):
         return {'id': self.id,
@@ -152,7 +152,7 @@ class DeliveryNotes(db.Model):
     user = db.relationship('Users', foreign_keys=[user_id])
 
     def __repr__(self):
-        return f'<DeliveryNotes: {self.id} - {self.center_id}>'
+        return f'<Delivery Notes: {self.id} - Center: {self.center_id}>'
 
     def serialize(self):
         return {'id': self.id,

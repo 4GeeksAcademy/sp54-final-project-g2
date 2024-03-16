@@ -26,13 +26,49 @@ def create_token():
     response_body = {}
     email = request.json.get("email", None)
     password = request.json.get("password", None)
-    user = db.session.query(Users).filter(email=email, password=password, is_active=True).first()
+    rol = request.json.get("rol", None)
+    user = db.session.query(Users).filter(email=email, password=password, rol=rol).first()
     if user is None:
         return jsonify({"msg": "Acces denied"}), 401
     access_token = create_access_token(identity = user.id)
     response_body["msg"] = "Welcome"
-    return jsonify({ "token": access_token, "user_id": user.id }), 200        
+    return jsonify({ "token": access_token, "user_id": user.id }), 200       
+
+
+@api.route("/register", methods["POST"])
+def register_user():
+    response_body = {}
+    data = request.json
+
+    # Verificar si el email ya existe.
+    existing_user = User.query.filter_by(email=data['email']).first()    
+    if existing_user:
+        return jsonify({"msg": "The eMail already exist"}), 400
+
+    # Crear un nuevo usuario
+    new_user = User(
+        email=data['email'],
+        rol="Jefe cocina",
+        password=data['password'],
+        is_active=True)
+
+    db.session.add(new_user)    
+    db.session.commit()
+
+    # Crear un token de acceso para el nuevo usuario
+    access_token = create_access_token(identity=new_user.id)
+
+    response_body['msg'] = "User resgistered succesfull"
+    return jsonify({"token": access_token, "user_id": new_user.id}), 201
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 
 
-# Ayuda para subir
+
+
+
+
+
