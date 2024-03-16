@@ -10,21 +10,20 @@ class Users(db.Model):
     name = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(80), unique=False, nullable=False)
-    rol = db.Column(db.Enum('Admin', 'Jefe de Compras', 'Cocinero', name="Rol"), nullable=False)
+    rol = db.Column(db.Enum('Admin', 'Jefe de Compras', 'Cocinero', name="rol"), nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
 
     def __repr__(self):
-        return f'<Users: {self.id} - {self.email} - {self.rol} - {self.is_active}>'
+        return f'<User: {self.id} - {self.email}>'
 
     def serialize(self):
-        # Do not serialize the password, its a security breach
         return {'id': self.id,
                 'email': self.email,
                 'rol': self.rol,
                 'is_active': self.is_active}
 
 
-class Center(db.Model):
+class Centers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), nullable=False)
     address = db.Column(db.String(20), nullable=False)
@@ -32,7 +31,7 @@ class Center(db.Model):
     phone = db.Column(db.Integer)
 
     def __repr__(self):
-        return f'<Center: {self.id} - {self.name} - {self.address} - {self.manager} - {self.phone}>'
+        return f'<Center: {self.id} - {self.name}>'
 
     def serialize(self):
         return {'id': self.id,
@@ -42,46 +41,46 @@ class Center(db.Model):
                 'phone': self.phone}
 
 
-class Composition(db.Model):
+class Compositions(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), nullable=False)
-    sum_costs = db.Column(db.Integer, nullable=False)
+    cost = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
-        return f'<Composition: {self.id} - {self.name} - {self.sum_costs}>'
+        return f'<Composition: {self.id} - {self.name}>'
 
     def serialize(self):
         return {'id': self.id,
                 'name': self.name,
-                'sum_costs': self.sum_costs}
+                'cost': self.cost}
 
 
-class Recipe(db.Model):
+class Recipes(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
-    units = db.Column(db.Integer, nullable=False)
-    cost_unit = db.Column(db.Integer, nullable=False)
+    meals = db.Column(db.Integer, nullable=False)
+    cost_meals = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
-        return f'<Recipe: {self.id} - {self.name} - {self.is_active} - {self.units} - {self.cost_unit}>'
+        return f'<Recipe: {self.id} - {self.name}>'
 
     def serialize(self):
         return {'id': self.id,
                 'name': self.name,
                 'is_active': self.is_active,
-                'units': self.units,
-                'cost_unit': self.cost_unit}
+                'meals': self.meals,
+                'cost_meals': self.cost_meals}
 
 
-class Suplier(db.Model):
+class Supliers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), nullable=False)
     phone = db.Column(db.Integer)  
     email = db.Column(db.String(120), unique=True, nullable=False)
 
     def __repr__(self):
-        return f'<Suplier: {self.id} - {self.name} - {self.phone} - {self.email}>'
+        return f'<Suplier: {self.id} - {self.name}>'
 
     def serialize(self):
         return {'id': self.id,
@@ -90,18 +89,18 @@ class Suplier(db.Model):
                 'email': self.email}
 
 
-class Reference(db.Model):
+class References(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), nullable=False)
-    category = db.Column(db.Enum('Alimento Fresco', 'Alimento Congelado', 'Conserva', 'Bebida', 'Licor', name="Category"), nullable=False)
-    units = db.Column(db.Enum('ud', 'gr', 'ml', 'kg', 'l'), nullable=False)
-    id_suplier = db.Column(db.Integer, db.ForeignKey('suplier.id'))
+    category = db.Column(db.Enum('Alimento Fresco', 'Alimento Congelado', 'Conserva', 'Bebida', 'Licor', name="category"), nullable=False)
+    units = db.Column(db.Enum('ud', 'gr', 'ml', 'kg', 'l', name="units"), nullable=False)
+    id_suplier = db.Column(db.Integer, db.ForeignKey('supliers.id'))
     cost = db.Column(db.Integer, nullable=False)
-    vat = db.Column(db.Enum('4', '10', '21', name="VAT"), nullable=False)
+    vat = db.Column(db.Enum('4', '10', '21', name="vat"), nullable=False)
     purchase_format = db.Column(db.Integer)
 
     def __repr__(self):
-        return f'<Reference: {self.id} - {self.name} - {self.category} - {self.units} - {self.id_suplier} - {self.cost} - {self.vat} - {self.purchase_format}>'
+        return f'<Reference: {self.id} - {self.name}>'
 
     def serialize(self):
         return {'id': self.id,
@@ -114,128 +113,124 @@ class Reference(db.Model):
                 'purchase_format': self.purchase_format}
 
 
-class Prevision(db.Model):
+class Previsions(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    center_id = db.Column(db.Integer, db.ForeignKey('center.id'))
     date = db.Column(db.DateTime, nullable=False)
-    service = db.Column(db.Enum('Desayuno', 'Almuerzo', 'Cena', name="Service"), nullable=False)
+    service = db.Column(db.Enum('Desayuno', 'Almuerzo', 'Cena', name="service"), nullable=False)
     pax_service = db.Column(db.Integer, nullable=False)
-    composition_id = db.Column(db.Integer, db.ForeignKey('composition.id'))
-    users_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    center_to = db.relationship('Center', foreign_keys=[center_id])
-    composition_to = db.relationship('Composition', foreign_keys=[composition_id])   
-    user_to = db.relationship('Users', foreign_keys=[users_id])
+    center_id = db.Column(db.Integer, db.ForeignKey('centers.id'))
+    composition_id = db.Column(db.Integer, db.ForeignKey('compositions.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    center_to = db.relationship('Centers', foreign_keys=[center_id])
+    composition_to = db.relationship('Compositions', foreign_keys=[composition_id])   
+    user_to = db.relationship('Users', foreign_keys=[user_id])
 
     def __repr__(self):
-        return f'<Prevision: {self.id} - {self.id_centre} - {self.date} - {self.service} - {self.pax_service} - {self.id_composition} - {self.id_user}>'
+        return f'<Prevision: {self.id} - {self.center_id}>'
 
     def serialize(self):
         return {'id': self.id,
-                'id_centre': self.id_centre,
+                'center_id': self.center_id,
                 'date': self.date,
                 'service': self.service,
                 'pax_service': self.pax_service,
-                'id_composition': self.id_composition,
-                'id_user': self.id_user}
+                'composition_id': self.composition_id,
+                'user_id': self.user_id}
 
 
 class DeliveryNotes(db.Model):
+    __tablename__ = "delivery_notes"
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable=False)
-    center_id = db.Column(db.Integer, db.ForeignKey('center.id'))
     sum_costs = db.Column(db.Integer, nullable=False)
     sum_totals = db.Column(db.Integer, nullable=False)
     sum_vat = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.Enum('Hoja de Envio', 'Albaran', name="Status"), nullable=False)
-    users_id = db.Column(db.Integer,db.ForeignKey('users.id'))
-    center = db.relationship('Center', foreign_keys=[center_id])
-    user = db.relationship('Users', foreign_keys=[users_id])
+    status = db.Column(db.Enum('Hoja de Envio', 'Albaran', name="status"), nullable=False)
+    user_id = db.Column(db.Integer,db.ForeignKey('users.id'))
+    center_id = db.Column(db.Integer, db.ForeignKey('centers.id'))
+    center = db.relationship('Centers', foreign_keys=[center_id])
+    user = db.relationship('Users', foreign_keys=[user_id])
 
     def __repr__(self):
-        return f'<DeliveryNotes: {self.id} - {self.date} - {self.id_center} - {self.sum_costs} - {self.sum_totals} - {self.sum_vat} - {self.status} - {self.id_user}>'
+        return f'<DeliveryNotes: {self.id} - {self.center_id}>'
 
     def serialize(self):
         return {'id': self.id,
                 'date': self.date,
-                'id_center': self.id_center,
+                'center_id': self.center_id,
                 'sum_costs': self.sum_costs,
                 'sum_totals': self.sum_totals,
                 'sum_vat': self.sum_vat,
                 'status': self.status,
-                'id_user': self.id_user}
+                'user_id': self.user_id}
 
 
-class DeliveryNotesLine(db.Model):
+class DeliveryNoteLines(db.Model):
+    __tablename__ = "delivery_note_lines"
     id = db.Column(db.Integer, primary_key=True)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'))
-    recipe_name = db.Column(db.Integer, db.ForeignKey('recipe.name'))
-    delivery_notes_id = db.Column(db.Integer, db.ForeignKey('delivery_notes.id'))
     qty = db.Column(db.Integer, nullable=False)
-    cost = db.Column(db.Integer, nullable=False)
+    unit_cost = db.Column(db.Integer, nullable=False)
     total = db.Column(db.Integer, nullable=False)
-    vat = db.Column(db.Enum('4', '10', '21', name="VAT"), nullable=False)
-    recipe_to = db.relationship('Recipe', foreign_keys=[recipe_id])
-    name_recipe_to = db.relationship('Recipe', foreign_keys=[recipe_name])
-    delivery_to = db.relationship('DeliveryNotes', foreign_keys=[delivery_notes_id])
+    vat = db.Column(db.Enum('4', '10', '21', name="vat"), nullable=False)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'))
+    delivery_note_id = db.Column(db.Integer, db.ForeignKey('delivery_notes.id'))
+    recipe_to = db.relationship('Recipes', foreign_keys=[recipe_id])
+    delivery_to = db.relationship('DeliveryNotes', foreign_keys=[delivery_note_id])
 
     def __repr__(self):
-        return f'<DeliveryNotesLine: {self.id} - {self.id_recipe} - {self.name_recipe} - {self.id_delivery_note} - {self.qty} - {self.cost} - {self.total} - {self.vat}>'
+        return f'<Delivery Note Line: {self.id} - {self.recipe_id} - {self.delivery_note_id}>'
 
     def serialize(self):
         return {'id': self.id,
-                'id_recipe': self.id_recipe,
-                'name_recipe': self.name_recipe,
-                'id_delivery_note': self.id_delivery_note,
+                'recipe_id': self.recipe_id,
+                'delivery_note_id': self.delivery_note_id,
                 'qty': self.qty,
                 'cost': self.cost,
                 'total': self.total,
                 'vat': self.vat}
 
 
-class CompositionLine(db.Model):
+class CompositionLines(db.Model):
+    __tablename__ = "composition_lines"
     id = db.Column(db.Integer, primary_key=True)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'))
-    recipe_name = db.Column(db.Integer, db.ForeignKey('recipe.name'))
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'))
     units_recipe = db.Column(db.Integer, nullable=False)
     cost_unit_line = db.Column(db.Integer, nullable=False)
-    composition_id = db.Column(db.Integer, db.ForeignKey('composition.id'))
-    recipe_to = db.relationship('Recipe', foreign_keys=[recipe_id])
-    name_recipe_to = db.relationship('Recipe', foreign_keys=[recipe_name])
-    composition = db.relationship('Composition', foreign_keys=[composition_id])  
+    composition_id = db.Column(db.Integer, db.ForeignKey('compositions.id'))
+    recipe_to = db.relationship('Recipes', foreign_keys=[recipe_id])
+    composition_to = db.relationship('Compositions', foreign_keys=[composition_id])  
 
     def __repr__(self):
-        return f'<CompositionLine: {self.id} - {self.id_recipe} - {self.name_recipe} - {self.units_recipe} - {self.cost_unit_line} - {self.id_composition}>'
+        return f'<CompositionLine: {self.id} - {self.recipe_id}>'
 
     def serialize(self):
         return {'id': self.id,
-                'id_recipe': self.id_recipe,
-                'name_recipe': self.name_recipe,
+                'recipe_id': self.recipe_id,
                 'units_recipe': self.units_recipe,
                 'cost_unit_line': self.cost_unit_line,
-                'id_composition': self.id_composition}
+                'composition_id': self.composition_id}
 
 
-class LineRecipe(db.Model):
+class LineRecipes(db.Model):
+    __tablename__ = "line_recipes"
     id = db.Column(db.Integer, primary_key=True)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'))
-    reference_id = db.Column(db.Integer, db.ForeignKey('reference.id'))
-    name_reference = db.Column(db.String(20), nullable=False)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'))
+    reference_id = db.Column(db.Integer, db.ForeignKey('references.id'))
     qty = db.Column(db.Integer, nullable=False)
     cost = db.Column(db.Integer, nullable=False)
     total = db.Column(db.Integer, nullable=False)
     units = db.Column(db.Integer, nullable=False)
     cost_unit = db.Column(db.Integer, nullable=False)
-    reference = db.relationship('Reference', foreign_keys=[reference_id])
-    recipe_to = db.relationship('Recipe', foreign_keys=[recipe_id])
+    reference_to = db.relationship('References', foreign_keys=[reference_id])
+    recipe_to = db.relationship('Recipes', foreign_keys=[recipe_id])
 
     def __repr__(self):
-        return f'<LineRecipe: {self.id} - {self.id_recipe} - {self.id_reference} - {self.name_reference} - {self.qty} - {self.cost} - {self.total} - {self.units} - {self.cost_unit}>'
+        return f'<Line Recipe: {self.id} - {self.recipe_id} - {self.reference_id}>'
 
     def serialize(self):
         return {'id': self.id,
-                'id_recipe': self.id_recipe,
-                'id_reference': self.id_reference,
-                'name_reference': self.name_reference,
+                'recipe_id': self.recipe_id,
+                'reference_id': self.reference_id,
                 'qty': self.qty,
                 'cost': self.cost,
                 'total': self.total,
@@ -243,23 +238,22 @@ class LineRecipe(db.Model):
                 'cost_unit': self.cost_unit}
 
 
-class ManufacturingOrder(db.Model):
+class ManufacturingOrders(db.Model):
+    __tablename__ = "manufacturing_orders"
     id = db.Column(db.Integer, primary_key=True)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'))
-    recipe_name = db.Column(db.String(50), db.ForeignKey('recipe.name'))
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'))
     delivery_date = db.Column(db.DateTime, nullable=False)
     qty = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.Enum('Pendiente', 'En Proceso', 'Fabricado', 'Almacenado', 'Enviado', name="Status"), nullable=False)
-    id_recipe_to = db.relationship('Recipe', foreign_keys=[recipe_id])
-    name_recipe_to = db.relationship('Recipe', foreign_keys=[recipe_name])
+    status = db.Column(db.Enum('Pendiente', 'En Proceso', 'Fabricado', 'Almacenado', 'Enviado', name="status"), nullable=False)
+    recipe_to = db.relationship('Recipes', foreign_keys=[recipe_id])
+    
 
     def __repr__(self):
-        return f'<CompositionLine: {self.id} - {self.id_recipe} - {self.name_recipe} - {self.delivery_date} - {self.qty} - {self.status}>'
+        return f'<Composition Line: {self.id} - Recipe: {self.recipe_id}>'
 
     def serialize(self):
         return {'id': self.id,
-                'id_recipe': self.id_recipe,
-                'name_recipe': self.name_recipe,
+                'recipe_id': self.recipe_id,
                 'delivery_date': self.delivery_date,
                 'qty': self.qty,
                 'status': self.status}
