@@ -32,3 +32,7 @@ def create_token():
     access_token = create_access_token(identity = user.id)
     response_body["msg"] = "Welcome"
     return jsonify({ "token": access_token, "user_id": user.id }), 200        
+
+
+
+# Ayuda para subir
