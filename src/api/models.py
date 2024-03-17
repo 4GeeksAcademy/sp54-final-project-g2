@@ -14,7 +14,7 @@ class Users(db.Model):
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
 
     def __repr__(self):
-        return f'<User: {self.id} - {self.email}>'
+        return f'<User: {self.id} email: {self.email}>'
 
     def serialize(self):
         return {'id': self.id,
@@ -178,7 +178,7 @@ class DeliveryNoteLines(db.Model):
     delivery_to = db.relationship('DeliveryNotes', foreign_keys=[delivery_note_id])
 
     def __repr__(self):
-        return f'<Delivery Note Line: {self.id} - {self.recipe_id} - {self.delivery_note_id}>'
+        return f'<Delivery Note Line: {self.id} - Recipe ID: {self.recipe_id} - Deliveri Note ID: {self.delivery_note_id}>'
 
     def serialize(self):
         return {'id': self.id,
@@ -201,7 +201,7 @@ class CompositionLines(db.Model):
     composition_to = db.relationship('Compositions', foreign_keys=[composition_id])  
 
     def __repr__(self):
-        return f'<CompositionLine: {self.id} - {self.recipe_id}>'
+        return f'<CompositionLine: {self.id} - Recipe ID: {self.recipe_id}>'
 
     def serialize(self):
         return {'id': self.id,
@@ -225,7 +225,7 @@ class LineRecipes(db.Model):
     recipe_to = db.relationship('Recipes', foreign_keys=[recipe_id])
 
     def __repr__(self):
-        return f'<Line Recipe: {self.id} - {self.recipe_id} - {self.reference_id}>'
+        return f'<Line Recipe: {self.id} - Recipe ID: {self.recipe_id} - Reference ID: {self.reference_id}>'
 
     def serialize(self):
         return {'id': self.id,
