@@ -117,13 +117,9 @@ class References(db.Model):
 class Previsions(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable=False)
-    service = db.Column(db.Enum('Desayuno', 'Almuerzo', 'Cena', name="service"), nullable=False)
-    pax_service = db.Column(db.Integer, nullable=False)
     center_id = db.Column(db.Integer, db.ForeignKey('centers.id'))
-    composition_id = db.Column(db.Integer, db.ForeignKey('compositions.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     center_to = db.relationship('Centers', foreign_keys=[center_id])
-    composition_to = db.relationship('Compositions', foreign_keys=[composition_id])   
     user_to = db.relationship('Users', foreign_keys=[user_id])
 
     def __repr__(self):
@@ -133,10 +129,28 @@ class Previsions(db.Model):
         return {'id': self.id,
                 'center_id': self.center_id,
                 'date': self.date,
+                'user_id': self.user_id}
+
+
+class PrevisionLines(db.Model):
+    __tablename__ = "prevision_lines"
+    id = db.Column(db.Integer, primary_key=True)
+    prevision_id = db.Column(db.Integer, db.ForeignKey('previsions.id')) 
+    service = db.Column(db.Enum('Desayuno', 'Almuerzo', 'Cena', name="service"), nullable=False)
+    pax_service = db.Column(db.Integer, nullable=False)
+    composition_id = db.Column(db.Integer, db.ForeignKey('compositions.id'))
+    composition_to = db.relationship('Compositions', foreign_keys=[composition_id]) 
+    prevision_to = db.relationship('Previsions', foreign_keys=[prevision_id])
+
+    def __repr__(self):
+        return f'<Prevision Line: {self.id} - Prevision: {self.prevision_id} - Service: {self.service}>'
+
+    def serialize(self):
+        return {'id': self.id,
+                'prevision_id': self.prevision_id,
                 'service': self.service,
                 'pax_service': self.pax_service,
-                'composition_id': self.composition_id,
-                'user_id': self.user_id}
+                'composition_id': self.composition_id}
 
 
 class DeliveryNotes(db.Model):
@@ -248,7 +262,6 @@ class ManufacturingOrders(db.Model):
     status = db.Column(db.Enum('Pendiente', 'En Proceso', 'Fabricado', 'Almacenado', 'Enviado', name="status"), nullable=False)
     recipe_to = db.relationship('Recipes', foreign_keys=[recipe_id])
     
-
     def __repr__(self):
         return f'<Composition Line: {self.id} - Recipe: {self.recipe_id}>'
 
