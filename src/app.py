@@ -10,6 +10,7 @@ from api.routes import api
 from api.admin import setup_admin
 from api.commands import setup_commands
 from api.models import db
+from flask_jwt_extended import JWTManager
 
 
 ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
@@ -30,7 +31,8 @@ setup_admin(app)  # Add the admin
 setup_commands(app)  # Add the admin
 # Add all endpoints form the API with a "api" prefix
 app.register_blueprint(api, url_prefix='/api')
-
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")  # Obenemos la semilla desde el .env
+jwt = JWTManager(app)
 
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
