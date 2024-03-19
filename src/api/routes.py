@@ -137,6 +137,70 @@ def modify_delivery_lines(user_id, delivery_note_lines_id):
         return response_body, 200
 
 
+"""@api.route('/centers', methods=['GET', 'POST'])
+def handle_centers():
+    response_body = {}
+    results = []
+    if request.method == 'GET':
+        centers = centers.query.all()
+        if centers == []:
+            return jsonify ({"msg":"Centro no encontrado!"})
+        resultado = list(map(lambda center:center.serialize(),centers))
+        return jsonify(resultado), 200"""
+
+
+
+@api.route('/centers', methods=['GET', 'POST'])
+def handle_centers():
+    response_body = {}
+    results = []
+    if request.method == 'GET':
+        centers = db.session.query(Centers).scalars()
+        response_body['results'] = [row.serialize()for row in centers]
+        response_body['message'] = 'GET centers'
+        return response_body, 200
+    if request.method == 'POST':
+        data = request.json
+        line = Centers (name = data['name'],
+                        address = data['address'], 
+                        manager = data['manager'],
+                        phone = data['phone'],)                
+        db.session.add(line)
+        db.session.commit()
+        response_body['results'] = line.serialize()
+        response_body['message'] = 'POST Method Centers'
+        return response_body, 200  
+        
+          
+@api.route('/centers/<int:center_id>', methods=['PUT', 'DELETE'])  
+def modify_center(center_id):  
+    response_body = {}
+    results = []
+    if request.method == 'DELETE':
+        line = center_id.query.filter_by(center_id = center_id).first()
+        if line:
+            db.session.delete(line)
+            db.session.commit()
+            response_body['message'] = f'Center {center_id} has been deleted.'
+            return response_body, 200
+        else:
+            response_body['message'] = f'Could not delete {center_id}.'
+            return response_body, 401
+    if request.method == 'PUT':
+        line = center_id.query.filter_by(center_id = center_id).first()
+        if not line:
+            response_body['message'] = f'Not found {center_id}'
+            return response_body, 404
+        data = request.json
+        line = Centers (name = data['name'],
+                        address = data['address'], 
+                        manager = data['manager'],
+                        phone = data['phone'],)
+        db.session.commit()
+        response_body['results'] = line.serialize()
+        response_body['message'] = f'Center {center_id} it´s OK!'
+        return response_body, 200
+
 if __name__ == '__main__':
     app.run(debug=True)
 #
