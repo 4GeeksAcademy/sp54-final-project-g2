@@ -185,7 +185,7 @@ def modify_center(center_id):
                         phone = data['phone'],)
         db.session.commit()
         response_body['results'] = line.serialize()
-        response_body['message'] = f'Center {center_id} it´s OK!'
+        response_body['message'] = f'Center {center_id} it is OK!'
         return response_body, 200
 
 
@@ -243,9 +243,56 @@ def modify_delivery_note(delivery_note_id):
                                user_id = data ['user_id'],)          
         db.session.commit()
         response_body['results'] = line.serialize()
-        response_body['message'] = f'Delivery Note {delivery_note_id} it´s OK!'
+        response_body['message'] = f'Delivery Note {delivery_note_id} it is OK!'
         return response_body, 200
 
+
+@api.route('/compositions', methods=['GET', 'POST'])
+def handle_compositions():
+    response_body = {}
+    results = []
+    if request.method == 'GET':
+        compositions = db.session.query(Compositions).scalars()
+        response_body['results'] = [row.serialize()for row in compositions]
+        response_body['message'] = 'GET compositions'
+        return response_body, 200
+    if request.method == 'POST':
+        data = request.json
+        line = Compositions (name = data['name'],
+                             cost = data['cost'])                
+        db.session.add(line)
+        db.session.commit()
+        response_body['results'] = line.serialize()
+        response_body['message'] = 'POST Method Compositions'
+        return response_body, 200
+
+
+@api.route('/compositions/<int:compositions_id>', methods=['PUT', 'DELETE'])  
+def modify_compositions(compositions_id): 
+    response_body = {}
+    results = []
+    if request.method == 'DELETE':
+        line = compositions_id.query.filter_by(compositions_id = compositions_id).first()
+        if line:
+            db.session.delete(line)
+            db.session.commit()
+            response_body['message'] = f'Composition {compositions_id} has been deleted.'
+            return response_body, 200
+        else:
+            response_body['message'] = f'Could not delete {compositions_id}.'
+            return response_body, 401
+    if request.method == 'PUT':
+        line = compositions_id.query.filter_by(compositions_id = compositions_id).first()
+        if not line:
+            response_body['message'] = f'Not found {compositions_id}'
+            return response_body, 404
+        data = request.json
+        line = Compositions (name = data['name'],
+                             cost = data['cost']) 
+        db.session.commit()
+        response_body['results'] = line.serialize()
+        response_body['message'] = f'Compositions {compositions_id} it is OK!'
+        return response_body, 200
 
 
 
