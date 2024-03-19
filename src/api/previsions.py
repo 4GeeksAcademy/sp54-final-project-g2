@@ -13,13 +13,14 @@ CORS(api)  # Allow CORS requests to this API
 
 # ENDPOINT para ver todos los registros de PREVISIONS y crear un GET o POST
 @api.route("/previsions", methods['GET','POST'])
-def handle_previsions(user_id):
+@jwt_required()
+def handle_previsions():
     response_body = {}
     results = []
-
+    current_user = get_jwt_identity()
+    user_id = current_user['user_id']
     if request.method == 'GET':
         # Obtener user_id de los encabezados de la solicitud
-        user_id = request.headers.get('user_id') # Almacenar en el Local Storage el user_id
         if user_id is None:
             response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
             return response_body, 400
