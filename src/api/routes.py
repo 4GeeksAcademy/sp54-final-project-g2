@@ -137,19 +137,6 @@ def modify_delivery_lines(user_id, delivery_note_lines_id):
         return response_body, 200
 
 
-"""@api.route('/centers', methods=['GET', 'POST'])
-def handle_centers():
-    response_body = {}
-    results = []
-    if request.method == 'GET':
-        centers = centers.query.all()
-        if centers == []:
-            return jsonify ({"msg":"Centro no encontrado!"})
-        resultado = list(map(lambda center:center.serialize(),centers))
-        return jsonify(resultado), 200"""
-
-
-
 @api.route('/centers', methods=['GET', 'POST'])
 def handle_centers():
     response_body = {}
@@ -201,9 +188,75 @@ def modify_center(center_id):
         response_body['message'] = f'Center {center_id} it´s OK!'
         return response_body, 200
 
+
+@api.route('/delivery_notes', methods=['GET', 'POST'])
+def handle_delivery_notes():
+    response_body = {}
+    results = []
+    if request.method == 'GET':
+        delivery_notes = db.session.query(DeliveryNotes).scalars()
+        response_body['results'] = [row.serialize()for row in delivery_notes]
+        response_body['message'] = 'GET delivery_notes'
+        return response_body, 200
+    if request.method == 'POST':
+        data = request.json
+        line =  DeliveryNotes (date = data['date'],
+                               center_id = data ['center_id'],
+                               sum_costs = data ['sum_costs'],
+                               sum_totals = data ['sum_totals'],
+                               sum_vat = data['sum_vat'],
+                               status = data ['status'],
+                               user_id = data ['user_id'],)                             
+        db.session.add(line)
+        db.session.commit()
+        response_body['results'] = line.serialize()
+        response_body['message'] = 'POST Method DeliveryNotes'
+        return response_body, 200  
+
+
+@api.route('/delivery_note/<int:delivery_note_id>', methods=['PUT', 'DELETE'])  
+def modify_delivery_note(delivery_note_id):  
+    response_body = {}
+    results = []
+    if request.method == 'DELETE':
+        line = delivery_note_id.query.filter_by(delivery_note_id = delivery_note_id).first()
+        if line:
+            db.session.delete(line)
+            db.session.commit()
+            response_body['message'] = f'Delivery Note {delivery_note_id} has been deleted.'
+            return response_body, 200
+        else:
+            response_body['message'] = f'Could not delete {delivery_note_id}.'
+            return response_body, 401
+    if request.method == 'PUT':
+        line = delivery_note_id.query.filter_by(delivery_note_id = delivery_note_id).first()
+        if not line:
+            response_body['message'] = f'Not found {delivery_note_id}'
+            return response_body, 404
+        data = request.json
+        line =  DeliveryNotes (date = data['date'],
+                               center_id = data ['center_id'],
+                               sum_costs = data ['sum_costs'],
+                               sum_totals = data ['sum_totals'],
+                               sum_vat = data['sum_vat'],
+                               status = data ['status'],
+                               user_id = data ['user_id'],)          
+        db.session.commit()
+        response_body['results'] = line.serialize()
+        response_body['message'] = f'Delivery Note {delivery_note_id} it´s OK!'
+        return response_body, 200
+
+
+
+
+
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
 #
+
 
 
 
