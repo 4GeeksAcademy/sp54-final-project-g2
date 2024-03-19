@@ -4,7 +4,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 from flask import Flask, request, jsonify, url_for, Blueprint
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-from api.models import db, Users
+from api.models import db, Users, Centers, Compositions, Recipes, Supliers, References, Previsions, DeliveryNotes, DeliveryNoteLines, CompositionLines, LineRecipes, ManufacturingOrders
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
@@ -27,42 +27,59 @@ def create_token():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
     rol = request.json.get("rol", None)
-    user = db.session.query(Users).filter(email=email, password=password, rol=rol).first()
+    user = db.session.query(Users).filter(Users.email==email, Users.password==password, Users.rol==rol).first()
     if user is None:
-        return jsonify({"msg": "Acces denied"}), 401
-    access_token = create_access_token(identity = user.id)
-    response_body["msg"] = "Welcome"
-    return jsonify({ "token": access_token, "user_id": user.id }), 200       
+        response_body['message'] = "Access denied"
+        return response_body, 401
+    access_token = create_access_token(identity = {'user_id': user.id, 'rol': user.rol})
+    response_body['message'] = "Welcome"
+    response_body['token'] = access_token
+    response_body['user'] = user.serialize()
+    return response_body, 200       
 
 
-@api.route("/register", methods["POST"])
+@api.route("/register", methods=["POST"])
 def register_user():
     response_body = {}
     data = request.json
-
+    if "email" not in data:
+        response_body["message"] = "Email is required"
+        return response_body, 400
+    if "name" not in data:
+        response_body["message"] = "Name is required"
+        return response_body, 400    
+    if "password" not in data:
+        response_body["message"] = "Password is required"
+        return response_body, 400
+    if "rol" not in data:
+        response_body["message"] = "Rol is required"
+        return response_body, 400
     # Verificar si el email ya existe.
-    existing_user = User.query.filter_by(email=data['email']).first()    
-    if existing_user:
-        return jsonify({"msg": "The email already exist"}), 400
-
+    user = Users.query.filter_by(email=data['email']).first()    
+    if user:
+        response_body['message'] = "The email already exist"
+        return response_body, 400
+    if data['rol'] != 'Admin' and data['rol'] != 'Cocinero' and data['rol'] != 'Jefe de Compras':
+        response_body['message'] = "Rol is invalid"
+        return response_body, 400     
     # Crear un nuevo usuario
-    new_user = User(email = data['email'],
-                    rol = "Jefe cocina",
-                    password = data['password'],
-                    is_active = True)
-
+    new_user = Users(email = data['email'],
+                     name = data['name'], 
+                     rol = data['rol'],
+                     password = data['password'],
+                     is_active = True)
     db.session.add(new_user)    
     db.session.commit()
-
     # Crear un token de acceso para el nuevo usuario
-    access_token = create_access_token(identity=new_user.id)
-
-    response_body['msg'] = "User resgistered succesfull"
-    return jsonify({"token": access_token, "user_id": new_user.id}), 201
+    access_token = create_access_token(identity = {'user_id': new_user.id, 'rol': new_user.rol})
+    response_body['message'] = "User resgistered succesfull"
+    response_body['token'] = access_token
+    response_body['user'] = user.serialize()
+    return response_body, 201
 
 
 # ENDPOINT para consultar o dar de alta una linea de albaran GET o POST
-@api.route("/delivery_note_lines/<int:delivery_note>", methods['GET', 'POST'])
+@api.route("/delivery_note_lines/<int:delivery_note>", methods=['GET', 'POST'])
 def handle_delivery_lines(user_id, delivery_note_id): # se tiene que filtrar por usuario y numero de albaran
     response_body = {}
     results = []
