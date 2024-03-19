@@ -164,7 +164,7 @@ def modify_prevision(user_id, prevision_lines_id):
         planLine = PrevisionLines ( prevision_id = data['prevision_id'],
                                     service = data['service'],
                                     pax_service = data['pax_service'],
-                                    composition_id = data['composition_id'],) # este campo no estoy seguro ya que lo tiene que coger del local storage
+                                    composition_id = data['composition_id'],) # este campo lo tiene que coger del local storage
         db.session.commit()
         response_body['results'] = planLine.serialize()
         response_body['message'] = f'Prevision Line {prevision_lines_id} se ha actualizado con exito'

@@ -21,9 +21,9 @@ def get_token_access(client_id, client_secret):
         print(f"Error: {e}")
         return None
 
-def get_request_api(url, token_acceso):
+def get_request_api(url, token_access):
     headers = {
-        'Authorization': f'Bearer {token_acceso}',
+        'Authorization': f'Bearer {token_access}',
         'Content-Type': 'application/json'
     }
     try:
