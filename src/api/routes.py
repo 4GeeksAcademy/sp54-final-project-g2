@@ -63,11 +63,11 @@ def register_user():
         response_body['message'] = "Rol is invalid"
         return response_body, 400     
     # Crear un nuevo usuario
-    new_user = Users(email = data['email'],
-                     name = data['name'], 
-                     rol = data['rol'],
-                     password = data['password'],
-                     is_active = True)
+    new_user = Users   (email = data['email'],
+                        name = data['name'], 
+                        rol = data['rol'],
+                        password = data['password'],
+                        is_active = True)
     db.session.add(new_user)    
     db.session.commit()
     # Crear un token de acceso para el nuevo usuario
@@ -78,21 +78,76 @@ def register_user():
     return response_body, 201
 
 
-# ENDPOINT para consultar o dar de alta una linea de albaran GET o POST
-@api.route("/delivery_note_lines/<int:delivery_note>", methods=['GET', 'POST'])
-def handle_delivery_lines(user_id, delivery_note_id): # se tiene que filtrar por usuario y numero de albaran
+@api.route('/delivery_notes', methods=['GET', 'POST'])
+def handle_delivery_notes():
     response_body = {}
     results = []
-
     if request.method == 'GET':
-        line = delivery_note_lines.query.filter_by(user_id = user_id, delivery_note_id = delivery_note_id).scalars()
+        delivery_notes = db.session.query(DeliveryNotes).scalars()
+        response_body['results'] = [row.serialize()for row in delivery_notes]
+        response_body['message'] = 'GET delivery_notes'
+        return response_body, 200
+    if request.method == 'POST':
+        data = request.json
+        line =  DeliveryNotes  (date = data['date'],
+                                center_id = data ['center_id'],
+                                sum_costs = data ['sum_costs'],
+                                sum_totals = data ['sum_totals'],
+                                sum_vat = data['sum_vat'],
+                                status = data ['status'],
+                                user_id = data ['user_id'],)                             
+        db.session.add(line)
+        db.session.commit()
+        response_body['results'] = line.serialize()
+        response_body['message'] = 'POST Method DeliveryNotes'
+        return response_body, 200  
+
+
+@api.route('/delivery_note/<int:delivery_note_id>', methods=['PUT', 'DELETE'])  
+def modify_delivery_note(delivery_note_id):  
+    response_body = {}
+    results = []
+    if request.method == 'DELETE':
+        line = delivery_note_id.query.filter_by(delivery_note_id = delivery_note_id).first()
+        if line:
+            db.session.delete(line)
+            db.session.commit()
+            response_body['message'] = f'Delivery Note {delivery_note_id} has been deleted.'
+            return response_body, 200
+        else:
+            response_body['message'] = f'Could not delete {delivery_note_id}.'
+            return response_body, 401
+    if request.method == 'PUT':
+        line = delivery_note_id.query.filter_by(delivery_note_id = delivery_note_id).first()
+        if not line:
+            response_body['message'] = f'Not found {delivery_note_id}'
+            return response_body, 404
+        data = request.json
+        line =  DeliveryNotes  (date = data['date'],
+                                center_id = data ['center_id'],
+                                sum_costs = data ['sum_costs'],
+                                sum_totals = data ['sum_totals'],
+                                sum_vat = data['sum_vat'],
+                                status = data ['status'],
+                                user_id = data ['user_id'],)          
+        db.session.commit()
+        response_body['results'] = line.serialize()
+        response_body['message'] = f'Delivery Note {delivery_note_id} it is OK!'
+        return response_body, 200
+
+
+@api.route("/delivery_note_lines/<int:delivery_note_id>", methods=['GET', 'POST'])
+def handle_delivery_lines(delivery_note_id):
+    response_body = {}
+    results = []
+    if request.method == 'GET':
+        line = DeliveryNoteLines.query.filter_by(delivery_note_line_id = delivery_note_line_id).scalars()
         response_body['results'] = [row.serialize() for row in line]
         response_body['message'] = 'GET Method Delivery Note Line'
         return response_body, 200
-
     if request.method == 'POST':
         data = request.json
-        line = DeliveryNoteLines (  qty = data['qty'],
+        line = DeliveryNoteLines   (qty = data['qty'],
                                     unit_cost = data['unit_cost'], # este campo deberia de venir de la tabla Recipes
                                     total = data['total'],
                                     vat = data['vat'],
@@ -105,12 +160,13 @@ def handle_delivery_lines(user_id, delivery_note_id): # se tiene que filtrar por
         return response_body, 200
 
 
-# ENDPOINT para poder editar o borrar una linea del albaran PUT o DELETE
 @api.route("/delivery_note_lines/<int:user_id>/delivery_line/<int:delivery_note_line_id>", methods=['DELETE', 'PUT'])
-def modify_delivery_lines(user_id, delivery_note_lines_id):
+@jwt_required()
+def modify_delivery_lines(delivery_note_lines_id):
     response_body = {}
     results = []
-
+    current_user = get_jwt_identity()
+    user_id = current_user['user_id']
     if request.method == 'DELETE':
         line = delivery_note_lines_id.query.filter_by(user_id = user_id, delivery_note_lines_id = delivery_note_lines_id).first()
         if line:
@@ -121,14 +177,13 @@ def modify_delivery_lines(user_id, delivery_note_lines_id):
         else:
             response_body['message'] = f'No se ha podido borrar la linea {delivery_note_line_id}'
             return response_body, 401
-
     if request.method == 'PUT':
-        line = delivery_note_lines_id.query.filter_by(user_id = user_id, delivery_note_lines_id = delivery_note_lines_id).first()
+        line = DeliveryNoteLines.query.filter_by(user_id = user_id, delivery_note_lines_id = delivery_note_lines_id).first()
         if not line:
             response_body['message'] = f'No se ha encontrado la linea {delivery_note_line_id}'
             return response_body, 404
         data = request.json
-        line = DeliveryNoteLines (  qty = data['qty'],
+        line = DeliveryNoteLines   (qty = data['qty'],
                                     total = data['total'],
                                     vat = data['vat'],)
         db.session.commit()
@@ -164,7 +219,7 @@ def modify_center(center_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
-        line = center_id.query.filter_by(center_id = center_id).first()
+        line = Centers.query.filter_by(center_id = center_id).first()
         if line:
             db.session.delete(line)
             db.session.commit()
@@ -189,64 +244,6 @@ def modify_center(center_id):
         return response_body, 200
 
 
-@api.route('/delivery_notes', methods=['GET', 'POST'])
-def handle_delivery_notes():
-    response_body = {}
-    results = []
-    if request.method == 'GET':
-        delivery_notes = db.session.query(DeliveryNotes).scalars()
-        response_body['results'] = [row.serialize()for row in delivery_notes]
-        response_body['message'] = 'GET delivery_notes'
-        return response_body, 200
-    if request.method == 'POST':
-        data = request.json
-        line =  DeliveryNotes (date = data['date'],
-                               center_id = data ['center_id'],
-                               sum_costs = data ['sum_costs'],
-                               sum_totals = data ['sum_totals'],
-                               sum_vat = data['sum_vat'],
-                               status = data ['status'],
-                               user_id = data ['user_id'],)                             
-        db.session.add(line)
-        db.session.commit()
-        response_body['results'] = line.serialize()
-        response_body['message'] = 'POST Method DeliveryNotes'
-        return response_body, 200  
-
-
-@api.route('/delivery_note/<int:delivery_note_id>', methods=['PUT', 'DELETE'])  
-def modify_delivery_note(delivery_note_id):  
-    response_body = {}
-    results = []
-    if request.method == 'DELETE':
-        line = delivery_note_id.query.filter_by(delivery_note_id = delivery_note_id).first()
-        if line:
-            db.session.delete(line)
-            db.session.commit()
-            response_body['message'] = f'Delivery Note {delivery_note_id} has been deleted.'
-            return response_body, 200
-        else:
-            response_body['message'] = f'Could not delete {delivery_note_id}.'
-            return response_body, 401
-    if request.method == 'PUT':
-        line = delivery_note_id.query.filter_by(delivery_note_id = delivery_note_id).first()
-        if not line:
-            response_body['message'] = f'Not found {delivery_note_id}'
-            return response_body, 404
-        data = request.json
-        line =  DeliveryNotes (date = data['date'],
-                               center_id = data ['center_id'],
-                               sum_costs = data ['sum_costs'],
-                               sum_totals = data ['sum_totals'],
-                               sum_vat = data['sum_vat'],
-                               status = data ['status'],
-                               user_id = data ['user_id'],)          
-        db.session.commit()
-        response_body['results'] = line.serialize()
-        response_body['message'] = f'Delivery Note {delivery_note_id} it is OK!'
-        return response_body, 200
-
-
 @api.route('/compositions', methods=['GET', 'POST'])
 def handle_compositions():
     response_body = {}
@@ -258,8 +255,8 @@ def handle_compositions():
         return response_body, 200
     if request.method == 'POST':
         data = request.json
-        line = Compositions (name = data['name'],
-                             cost = data['cost'])                
+        line = Compositions(name = data['name'],
+                            cost = data['cost'])                
         db.session.add(line)
         db.session.commit()
         response_body['results'] = line.serialize()
@@ -272,7 +269,7 @@ def modify_compositions(compositions_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
-        line = compositions_id.query.filter_by(compositions_id = compositions_id).first()
+        line = Compositions.query.filter_by(compositions_id = compositions_id).first()
         if line:
             db.session.delete(line)
             db.session.commit()
@@ -282,13 +279,13 @@ def modify_compositions(compositions_id):
             response_body['message'] = f'Could not delete {compositions_id}.'
             return response_body, 401
     if request.method == 'PUT':
-        line = compositions_id.query.filter_by(compositions_id = compositions_id).first()
+        line = Compositions.query.filter_by(compositions_id = compositions_id).first()
         if not line:
             response_body['message'] = f'Not found {compositions_id}'
             return response_body, 404
         data = request.json
-        line = Compositions (name = data['name'],
-                             cost = data['cost']) 
+        line = Compositions(name = data['name'],
+                            cost = data['cost']) 
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = f'Compositions {compositions_id} it is OK!'
@@ -300,16 +297,16 @@ def handle_compositions_Line():
     response_body = {}
     results = []
     if request.method == 'GET':
-        compositions = db.session.query(composition_lines).scalars()
+        compositions = db.session.query(CompositionLines).scalars()
         response_body['results'] = [row.serialize()for row in compositions]
         response_body['message'] = 'GET Composition Line'
         return response_body, 200
     if request.method == 'POST':
         data = request.json
-        line = Compositions (recipe_id = data['recipe_id'],
-                             units_recipe = data['units_recipe'],
-                             cost_unit_line = data['cost_unit_line'],
-                             composition_id = data['composition_id'],)                
+        line = Compositions(recipe_id = data['recipe_id'],
+                            units_recipe = data['units_recipe'],
+                            cost_unit_line = data['cost_unit_line'],
+                            composition_id = data['composition_id'],)                
         db.session.add(line)
         db.session.commit()
         response_body['results'] = line.serialize()
@@ -322,7 +319,7 @@ def modify_composition_line(compositions_line_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
-        line = composition_line_id.query.filter_by(composition_line_id = composition_line_id).first()
+        line = CompositionLines.query.filter_by(composition_line_id = composition_line_id).first()
         if line:
             db.session.delete(line)
             db.session.commit()
@@ -332,15 +329,15 @@ def modify_composition_line(compositions_line_id):
             response_body['message'] = f'Could not delete {composition_line_id}.'
             return response_body, 401
     if request.method == 'PUT':
-        line = composition_line_id.query.filter_by(composition_line_id = composition_line_id).first()
+        line = CompositionLines.query.filter_by(composition_line_id = composition_line_id).first()
         if not line:
             response_body['message'] = f'Not found {composition_line_id}'
             return response_body, 404
         data = request.json
-        line = CompositionLines ( recipe_id = data['recipe_id'],
-                                  units_recipe = data['units_recipe'],
-                                  cost_unit_line = data['cost_unit_line'],
-                                  composition_id = data['composition_id'],) 
+        line = CompositionLines(recipe_id = data['recipe_id'],
+                                units_recipe = data['units_recipe'],
+                                cost_unit_line = data['cost_unit_line'],
+                                composition_id = data['composition_id'],) 
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = f'Compositions Line {composition_line_id} it is OK!'
@@ -374,7 +371,7 @@ def modify_recipes(recipes_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
-        line = recipes_id.query.filter_by(recipes_id = recipes_id).first()
+        line = Recipes.query.filter_by(recipes_id = recipes_id).first()
         if line:
             db.session.delete(line)
             db.session.commit()
@@ -384,7 +381,7 @@ def modify_recipes(recipes_id):
             response_body['message'] = f'Could not delete {recipes_id}.'
             return response_body, 401
     if request.method == 'PUT':
-        line = recipes_id.query.filter_by(recipes_id = recipes_id).first()
+        line = Recipes.query.filter_by(recipes_id = recipes_id).first()
         if not line:
             response_body['message'] = f'Not found {recipes_id}'
             return response_body, 404
@@ -429,7 +426,7 @@ def modify_line_recipes(line_recipes_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
-        line = line_recipes_id.query.filter_by(line_recipes_id = line_recipes_id).first()
+        line = LineRecipes.query.filter_by(line_recipes_id = line_recipes_id).first()
         if line:
             db.session.delete(line)
             db.session.commit()
@@ -439,7 +436,7 @@ def modify_line_recipes(line_recipes_id):
             response_body['message'] = f'Could not delete {line_recipes_id}.'
             return response_body, 401
     if request.method == 'PUT':
-        line = line_recipes_id.query.filter_by(line_recipes_id = line_recipes_id).first()
+        line = LineRecipes.query.filter_by(line_recipes_id = line_recipes_id).first()
         if not line:
             response_body['message'] = f'Not found {line_recipes_id}'
             return response_body, 404
@@ -457,7 +454,6 @@ def modify_line_recipes(line_recipes_id):
         return response_body, 200   
 
 
-# ENDPOINT para ver todos los registros de PREVISIONS y crear un GET o POST
 @api.route("/previsions", methods['GET','POST'])
 @jwt_required()
 def handle_previsions():
@@ -466,25 +462,21 @@ def handle_previsions():
     current_user = get_jwt_identity()
     user_id = current_user['user_id']
     if request.method == 'GET':
-        # Obtener user_id de los encabezados de la solicitud
         if user_id is None:
-            response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
+            response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
         plan = db.session.execute(db.select(Previsions).where(Prevision.user_id == user_id)).scalars()
         response_body['results'] = [row.serialize() for row in plan]
         response_body['message'] = 'GET Method Previsions'
-        return response_body, 200
-    
+        return response_body, 200 
     if request.method == 'POST':
-        # Obtener user_id de los encabezados de la solicitud
-        user_id = request.headers.get('user_id') # Almacenar en el Local Storage el user_id
         if user_id is None:
-            response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
+            response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
         data = request.json
-        plan = Previsions ( center_id = data['center_id'],
+        plan = Previsions  (center_id = data['center_id'],
                             date = data['date'],
-                            user_id = user_id,) # este campo no estoy seguro ya que lo tiene que coger del local storage
+                            user_id = user_id,)
         db.session.add(plan)
         db.session.commit()
         response_body['results'] = plan.serialize()
@@ -492,25 +484,23 @@ def handle_previsions():
         return response_body, 200       
 
 
-# ENDPOINT para editar o borrar una PREVISIONS PUT o DELETE
 @api.route("/prevision/<int:prevision_id>", methods['PUT', 'DELETE'])
-def modify_prevision(user_id, prevision_id):
+@jwt_required()
+def modify_prevision(prevision_id):
     response_body = {}
     results = []
-
-    if request.method == 'DELETE': # Se puede borrar una preciosion? si pero cuando se hayan borrado tambien todas las prevision_lines
+    current_user = get_jwt_identity()
+    user_id = current_user['user_id']
+    if request.method == 'DELETE':
         # Verificar si hay entradas asociadas en Prevision_lines
         prevision_lines_count = Prevision_lines.query.filter_by(prevision_id=prevision_id).count()
         if prevision_lines_count > 0:
             response_body['message'] = f'No se puede borrar la Prevision {prevision_id} mientras tenga entradas en Prevision_lines'
             return response_body, 400
-        # Si no hay entradas asociadas, se puede eliminar la Prevision
-        # Obtener user_id de los encabezados de la solicitud
-        user_id = request.headers.get('user_id') # Almacenar en el Local Storage el user_id
         if user_id is None:
-            response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
+            response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
-        plan = prevision_id.query.filter_by(user_id = user_id, prevision_id = prevision_id).first()
+        plan = Previsions.query.filter_by(user_id = user_id, prevision_id = prevision_id).first()
         if plan:
             db.session.delete(plan)
             db.session.commit()
@@ -519,55 +509,49 @@ def modify_prevision(user_id, prevision_id):
         else:
             response_body['message'] = f'No se ha podido borrar la prevision {prevision_id}'
             return response_body, 401
-
-    if request.method == 'PUT':
-        user_id = request.headers.get('user_id') # Almacenar en el Local Storage el user_id
+    if request.method == 'PUT':# Almacenar en el Local Storage el user_id
         if user_id is None:
             response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
             return response_body, 400
-        plan = prevision_id.query.filter_by(user_id = user_id, prevision_id = prevision_id).first()
+        plan = Previsions.query.filter_by(user_id = user_id, prevision_id = prevision_id).first()
         if not plan:
             response_body['message'] = f'No se ha encontrado la prevision {prevision_id}'
             return response_body, 404
         data = request.json
-        plan = Prevision (  center_id = data['center_id'],
+        plan = Prevision   (center_id = data['center_id'],
                             date = data['date'],
-                            user_id = user_id,) # este campo lo tiene que coger del local storage
+                            user_id = user_id,)
         db.session.commit()
         response_body['results'] = plan.serialize()
         response_body['message'] = f'Prevision {prevision_id} se ha actualizado con exito'
         return response_body, 200       
 
 
-# ENDPOINT para ver todos los registros de PREVISIONS_LINES y crear un GET o POST
 @api.route("/prevision_lines", methods['GET','POST'])
-def handle_prevision_lines(user_id):
+@jwt_required()
+def handle_prevision_lines():
     response_body = {}
     results = []
-
+    current_user = get_jwt_identity()
+    user_id = current_user['user_id']
     if request.method == 'GET':
-        # Obtener user_id de los encabezados de la solicitud
-        user_id = request.headers.get('user_id') # Almacenar en el Local Storage el user_id
         if user_id is None:
-            response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
+            response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
         planLine = db.session.execute(db.select(Prevision_Lines).where(Prevision_Lines.user_id == user_id)).scalars()
         response_body['results'] = [row.serialize() for row in planLine]
         response_body['message'] = 'GET Method Prevision_Lines'
         return response_body, 200
-    
     if request.method == 'POST':
-        # Obtener user_id de los encabezados de la solicitud
-        user_id = request.headers.get('user_id') # Almacenar en el Local Storage el user_id
         if user_id is None:
-            response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
+            response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
         data = request.json
-        planLine = PrevisionLines ( prevision_id = data['prevision_id'],
+        planLine = PrevisionLines ( prevision_id = data['prevision_id'], #este campo lo tiene que heredar
                                     service = data['service'],
                                     pax_service = data['pax_service']
                                     composition_id = data['composition_id'],
-                                    user_id = user_id,) # este campo lo tiene que coger del local storage
+                                    user_id = user_id,)
         db.session.add(planLine)    
         db.session.commit()
         response_body['results'] = planLine.serialize()
@@ -575,19 +559,18 @@ def handle_prevision_lines(user_id):
         return response_body, 200       
 
 
-# ENDPOINT para editar o borrar una PREVISIONS_LINES PUT o DELETE
 @api.route("/prevision_line/<int:prevision_lines_id>", methods['PUT', 'DELETE'])
-def modify_prevision(user_id, prevision_lines_id):
+@jwt_required()
+def modify_prevision(prevision_lines_id):
     response_body = {}
     results = []
-
+    current_user = get_jwt_identity()
+    user_id = current_user['user_id']
     if request.method == 'DELETE':
-        # Obtener user_id de los encabezados de la solicitud
-        user_id = request.headers.get('user_id') # Almacenar en el Local Storage el user_id
         if user_id is None:
-            response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
+            response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
-        planLine = prevision_lines_id.query.filter_by(user_id = user_id, prevision_lines_id = prevision_lines_id).first()
+        planLine = PrevisionLines.query.filter_by(user_id = user_id, prevision_lines_id = prevision_lines_id).first()
         if planLine:
             db.session.delete(planLine)
             db.session.commit()
@@ -596,14 +579,11 @@ def modify_prevision(user_id, prevision_lines_id):
         else:
             response_body['message'] = f'No se ha podido borrar la Linea de Prevision {prevision_lines_id}'
             return response_body, 401
-
     if request.method == 'PUT':
-        # Obtener user_id de los encabezados de la solicitud
-        user_id = request.headers.get('user_id') # Almacenar en el Local Storage el user_id
         if user_id is None:
-            response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
+            response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
-        planLine = prevision_lines_id.query.filter_by(user_id = user_id, prevision_lines_id = prevision_lines_id).first()
+        planLine = PrevisionLines.query.filter_by(user_id = user_id, prevision_lines_id = prevision_lines_id).first()
         if not planLine:
             response_body['message'] = f'No se ha encontrado la prevision line {prevision_lines_id}'
             return response_body, 404
@@ -611,42 +591,38 @@ def modify_prevision(user_id, prevision_lines_id):
         planLine = PrevisionLines ( prevision_id = data['prevision_id'],
                                     service = data['service'],
                                     pax_service = data['pax_service'],
-                                    composition_id = data['composition_id'],) # este campo lo tiene que coger del local storage
+                                    composition_id = data['composition_id'],) 
         db.session.commit()
         response_body['results'] = planLine.serialize()
         response_body['message'] = f'Prevision Line {prevision_lines_id} se ha actualizado con exito'
         return response_body, 200     
 
 
-# ENDPOINT para leer o crear MANUFACTURING_ORDERS GET or POST
 @api.route("/manufacturing_ord", methods['GET','POST'])
-def handle_manufacturing(user_id):
+@jwt_required()
+def handle_manufacturing():
     response_body = {}
     results = []
-
+    current_user = get_jwt_identity()
+    user_id = current_user['user_id']
     if request.method == 'GET':
-        # Obtener user_id de los encabezados de la solicitud
-        user_id = request.headers.get('user_id') # Almacenar en el Local Storage el user_id
         if user_id is None:
-            response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
+            response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
         data = db.session.execute(db.select(ManufacturingOrders).where(ManufacturingOrders.user_id == user_id)).scalars()
         response_body['results'] = [row.serialize() for row in data]
         response_body['message'] = 'GET Method Prevision_Lines'
         return response_body, 200
-    
     if request.method == 'POST':
-        # Obtener user_id de los encabezados de la solicitud
-        user_id = request.headers.get('user_id') # Almacenar en el Local Storage el user_id
         if user_id is None:
-            response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
+            response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
         data = request.json
         plan = ManufacturingOrders (recipe_id = data['recipe_id'],
                                     delivery_date = data['delivery_date'],
                                     qty = data['qty']
                                     status = data['status'],
-                                    user_id = user_id,) # este campo lo tiene que coger del local storage
+                                    user_id = user_id,) #
         db.session.add(plan)    
         db.session.commit()
         response_body['results'] = plan.serialize()
@@ -654,19 +630,18 @@ def handle_manufacturing(user_id):
         return response_body, 200 
 
 
-# ENDPOINT para borrar o actualizar MANUFACTURING_ORDERS DELETE or PUT
 @api.route("/manufacturing_ord/<int:manufacturing_orders_id>", methods['PUT', 'DELETE'])
-def modify_manufacturing(user_id, manufacturing_orders_id):
+@jwt_required()
+def modify_manufacturing(manufacturing_orders_id):
     response_body = {}
     results = []
-
+    current_user = get_jwt_identity()
+    user_id = current_user['user_id']
     if request.method == 'DELETE':
-        # Obtener user_id de los encabezados de la solicitud
-        user_id = request.headers.get('user_id') # Almacenar en el Local Storage el user_id
         if user_id is None:
-            response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
+            response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
-        plan = manufacturing_orders_id.query.filter_by(user_id = user_id, manufacturing_orders_id = manufacturing_orders_id).first()
+        plan = ManufacturingOrders.query.filter_by(user_id = user_id, manufacturing_orders_id = manufacturing_orders_id).first()
         if plan:
             db.session.delete(plan)
             db.session.commit()
@@ -675,12 +650,9 @@ def modify_manufacturing(user_id, manufacturing_orders_id):
         else:
             response_body['message'] = f'No se ha podido borrar la manufacturing order {manufacturing_orders_id}'
             return response_body, 401
-
     if request.method == 'PUT':
-        # Obtener user_id de los encabezados de la solicitud
-        user_id = request.headers.get('user_id') # Almacenar en el Local Storage el user_id
         if user_id is None:
-            response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
+            response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
         plan = manufacturing_orders_id.query.filter_by(user_id = user_id, manufacturing_orders_id = manufacturing_orders_id).first()
         if not plan:
@@ -691,16 +663,17 @@ def modify_manufacturing(user_id, manufacturing_orders_id):
                                     delivery_date = data['delivery_date'],
                                     qty = data['qty']
                                     status = data['status'],
-                                    user_id = user_id,) # este campo lo tiene que coger del local storage
+                                    user_id = user_id,) 
         db.session.commit()
         response_body['results'] = plan.serialize()
         response_body['message'] = f'Manufacturing order {manufacturing_orders_id} se ha actualizado con exito'
         return response_body, 200  
 
 
+
 if __name__ == '__main__':
     app.run(debug=True)
-#
+
 
 
 
