@@ -77,7 +77,7 @@ class Recipes(db.Model):
 class Supliers(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), nullable=False)
-    phone = db.Column(db.Integer)  
+    phone = db.Column(db.Integer)
     email = db.Column(db.String(120), unique=True, nullable=False)
 
     def __repr__(self):
@@ -213,7 +213,7 @@ class CompositionLines(db.Model):
     cost_unit_line = db.Column(db.Integer, nullable=False)
     composition_id = db.Column(db.Integer, db.ForeignKey('compositions.id'))
     recipe_to = db.relationship('Recipes', foreign_keys=[recipe_id])
-    composition_to = db.relationship('Compositions', foreign_keys=[composition_id])  
+    composition_to = db.relationship('Compositions', foreign_keys=[composition_id])
 
     def __repr__(self):
         return f'<CompositionLine: {self.id} - Recipe ID: {self.recipe_id}>'
@@ -261,7 +261,7 @@ class ManufacturingOrders(db.Model):
     qty = db.Column(db.Integer, nullable=False)
     status = db.Column(db.Enum('Pendiente', 'En Proceso', 'Fabricado', 'Almacenado', 'Enviado', name="status"), nullable=False)
     recipe_to = db.relationship('Recipes', foreign_keys=[recipe_id])
-    
+
     def __repr__(self):
         return f'<Composition Line: {self.id} - Recipe: {self.recipe_id}>'
 
