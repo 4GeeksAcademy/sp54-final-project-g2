@@ -35,7 +35,7 @@ def create_token():
     response_body['message'] = "Welcome"
     response_body['token'] = access_token
     response_body['user'] = user.serialize()
-    return response_body, 200       
+    return response_body, 200
 
 
 @api.route("/register", methods=["POST"])
@@ -47,7 +47,7 @@ def register_user():
         return response_body, 400
     if "name" not in data:
         response_body["message"] = "Name is required"
-        return response_body, 400    
+        return response_body, 400
     if "password" not in data:
         response_body["message"] = "Password is required"
         return response_body, 400
@@ -55,20 +55,20 @@ def register_user():
         response_body["message"] = "Rol is required"
         return response_body, 400
     # Verificar si el email ya existe.
-    user = Users.query.filter_by(email=data['email']).first()    
+    user = Users.query.filter_by(email=data['email']).first()
     if user:
         response_body['message'] = "The email already exist"
         return response_body, 400
     if data['rol'] != 'Admin' and data['rol'] != 'Cocinero' and data['rol'] != 'Jefe de Compras':
         response_body['message'] = "Rol is invalid"
-        return response_body, 400     
+        return response_body, 400
     # Crear un nuevo usuario
     new_user = Users   (email = data['email'],
-                        name = data['name'], 
+                        name = data['name'],
                         rol = data['rol'],
                         password = data['password'],
                         is_active = True)
-    db.session.add(new_user)    
+    db.session.add(new_user)
     db.session.commit()
     # Crear un token de acceso para el nuevo usuario
     access_token = create_access_token(identity = {'user_id': new_user.id, 'rol': new_user.rol})
@@ -95,16 +95,16 @@ def handle_delivery_notes():
                                 sum_totals = data ['sum_totals'],
                                 sum_vat = data['sum_vat'],
                                 status = data ['status'],
-                                user_id = data ['user_id'],)                             
+                                user_id = data ['user_id'],)
         db.session.add(line)
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = 'POST Method DeliveryNotes'
-        return response_body, 200  
+        return response_body, 200
 
 
-@api.route('/delivery_note/<int:delivery_note_id>', methods=['PUT', 'DELETE'])  
-def modify_delivery_note(delivery_note_id):  
+@api.route('/delivery_note/<int:delivery_note_id>', methods=['PUT', 'DELETE'])
+def modify_delivery_note(delivery_note_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
@@ -129,7 +129,7 @@ def modify_delivery_note(delivery_note_id):
                                 sum_totals = data ['sum_totals'],
                                 sum_vat = data['sum_vat'],
                                 status = data ['status'],
-                                user_id = data ['user_id'],)          
+                                user_id = data ['user_id'],)
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = f'Delivery Note {delivery_note_id} it is OK!'
@@ -204,18 +204,18 @@ def handle_centers():
     if request.method == 'POST':
         data = request.json
         line = Centers (name = data['name'],
-                        address = data['address'], 
+                        address = data['address'],
                         manager = data['manager'],
-                        phone = data['phone'],)                
+                        phone = data['phone'],)
         db.session.add(line)
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = 'POST Method Centers'
-        return response_body, 200  
-        
+        return response_body, 200
 
-@api.route('/centers/<int:center_id>', methods=['PUT', 'DELETE'])  
-def modify_center(center_id):  
+
+@api.route('/centers/<int:center_id>', methods=['PUT', 'DELETE'])
+def modify_center(center_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
@@ -235,7 +235,7 @@ def modify_center(center_id):
             return response_body, 404
         data = request.json
         line = Centers (name = data['name'],
-                        address = data['address'], 
+                        address = data['address'],
                         manager = data['manager'],
                         phone = data['phone'],)
         db.session.commit()
@@ -256,7 +256,7 @@ def handle_compositions():
     if request.method == 'POST':
         data = request.json
         line = Compositions(name = data['name'],
-                            cost = data['cost'])                
+                            cost = data['cost'],)
         db.session.add(line)
         db.session.commit()
         response_body['results'] = line.serialize()
@@ -264,8 +264,8 @@ def handle_compositions():
         return response_body, 200
 
 
-@api.route('/compositions/<int:compositions_id>', methods=['PUT', 'DELETE'])  
-def modify_compositions(compositions_id): 
+@api.route('/compositions/<int:compositions_id>', methods=['PUT', 'DELETE'])
+def modify_compositions(compositions_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
@@ -285,7 +285,7 @@ def modify_compositions(compositions_id):
             return response_body, 404
         data = request.json
         line = Compositions(name = data['name'],
-                            cost = data['cost']) 
+                            cost = data['cost'],)
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = f'Compositions {compositions_id} it is OK!'
@@ -306,7 +306,7 @@ def handle_compositions_Line():
         line = Compositions(recipe_id = data['recipe_id'],
                             units_recipe = data['units_recipe'],
                             cost_unit_line = data['cost_unit_line'],
-                            composition_id = data['composition_id'],)                
+                            composition_id = data['composition_id'],)
         db.session.add(line)
         db.session.commit()
         response_body['results'] = line.serialize()
@@ -314,8 +314,8 @@ def handle_compositions_Line():
         return response_body, 200
 
 
-@api.route('/composition_Lines/<int:composition_line_id>', methods=['PUT', 'DELETE'])  
-def modify_composition_line(compositions_line_id): 
+@api.route('/composition_Lines/<int:composition_line_id>', methods=['PUT', 'DELETE'])
+def modify_composition_line(compositions_line_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
@@ -337,7 +337,7 @@ def modify_composition_line(compositions_line_id):
         line = CompositionLines(recipe_id = data['recipe_id'],
                                 units_recipe = data['units_recipe'],
                                 cost_unit_line = data['cost_unit_line'],
-                                composition_id = data['composition_id'],) 
+                                composition_id = data['composition_id'],)
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = f'Compositions Line {composition_line_id} it is OK!'
@@ -358,16 +358,16 @@ def handle_recipes():
         line = Recipes (name = data['name'],
                         is_active = data['is_active'],
                         meals = data ['meals'],
-                        cost_meals = data ['cost_meals'],)                
+                        cost_meals = data ['cost_meals'],)
         db.session.add(line)
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = 'POST Method Recipes'
         return response_body, 200
-        
 
-@api.route('/recipes/<int:recipes_id>', methods=['PUT', 'DELETE'])  
-def modify_recipes(recipes_id): 
+
+@api.route('/recipes/<int:recipes_id>', methods=['PUT', 'DELETE'])
+def modify_recipes(recipes_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
@@ -393,7 +393,7 @@ def modify_recipes(recipes_id):
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = f'Recipes {recipes_id} it is OK!'
-        return response_body, 200    
+        return response_body, 200
 
 
 @api.route('/line_recipes', methods=['GET', 'POST'])
@@ -413,16 +413,16 @@ def handle_line_recipe():
                             cost = data ['cost'],
                             total = data ['total'],
                             units = data ['units'],
-                            cost_unit = data ['cost_unit'],)                
+                            cost_unit = data ['cost_unit'],)
         db.session.add(line)
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = 'POST Method Line Recipe'
         return response_body, 200
-        
 
-@api.route('/line_recipes/<int:line_recipes_id>', methods=['PUT', 'DELETE'])  
-def modify_line_recipes(line_recipes_id): 
+
+@api.route('/line_recipes/<int:line_recipes_id>', methods=['PUT', 'DELETE'])
+def modify_line_recipes(line_recipes_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
@@ -451,7 +451,7 @@ def modify_line_recipes(line_recipes_id):
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = f'Line recipes {line_recipes_id} it is OK!'
-        return response_body, 200   
+        return response_body, 200
 
 
 @api.route("/previsions", methods['GET','POST'])
@@ -468,7 +468,7 @@ def handle_previsions():
         plan = db.session.execute(db.select(Previsions).where(Prevision.user_id == user_id)).scalars()
         response_body['results'] = [row.serialize() for row in plan]
         response_body['message'] = 'GET Method Previsions'
-        return response_body, 200 
+        return response_body, 200
     if request.method == 'POST':
         if user_id is None:
             response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
@@ -481,7 +481,7 @@ def handle_previsions():
         db.session.commit()
         response_body['results'] = plan.serialize()
         response_body['message'] = 'POST Method Previsions'
-        return response_body, 200       
+        return response_body, 200
 
 
 @api.route("/prevision/<int:prevision_id>", methods['PUT', 'DELETE'])
@@ -505,7 +505,7 @@ def modify_prevision(prevision_id):
             db.session.delete(plan)
             db.session.commit()
             response_body['message'] = f'Prevision {prevision_id} del usuario {user_id} ha sido eliminada'
-            return response_body, 200            
+            return response_body, 200
         else:
             response_body['message'] = f'No se ha podido borrar la prevision {prevision_id}'
             return response_body, 401
@@ -524,7 +524,7 @@ def modify_prevision(prevision_id):
         db.session.commit()
         response_body['results'] = plan.serialize()
         response_body['message'] = f'Prevision {prevision_id} se ha actualizado con exito'
-        return response_body, 200       
+        return response_body, 200
 
 
 @api.route("/prevision_lines", methods['GET','POST'])
@@ -549,14 +549,14 @@ def handle_prevision_lines():
         data = request.json
         planLine = PrevisionLines ( prevision_id = data['prevision_id'], #este campo lo tiene que heredar
                                     service = data['service'],
-                                    pax_service = data['pax_service']
+                                    pax_service = data['pax_service'],
                                     composition_id = data['composition_id'],
                                     user_id = user_id,)
-        db.session.add(planLine)    
+        db.session.add(planLine)
         db.session.commit()
         response_body['results'] = planLine.serialize()
         response_body['message'] = 'POST Method Prevision_Line'
-        return response_body, 200       
+        return response_body, 200
 
 
 @api.route("/prevision_line/<int:prevision_lines_id>", methods['PUT', 'DELETE'])
@@ -575,7 +575,7 @@ def modify_prevision(prevision_lines_id):
             db.session.delete(planLine)
             db.session.commit()
             response_body['message'] = f'Prevision Line {prevision_lines_id} del usuario {user_id} ha sido eliminada'
-            return response_body, 200            
+            return response_body, 200
         else:
             response_body['message'] = f'No se ha podido borrar la Linea de Prevision {prevision_lines_id}'
             return response_body, 401
@@ -591,11 +591,11 @@ def modify_prevision(prevision_lines_id):
         planLine = PrevisionLines ( prevision_id = data['prevision_id'],
                                     service = data['service'],
                                     pax_service = data['pax_service'],
-                                    composition_id = data['composition_id'],) 
+                                    composition_id = data['composition_id'],)
         db.session.commit()
         response_body['results'] = planLine.serialize()
         response_body['message'] = f'Prevision Line {prevision_lines_id} se ha actualizado con exito'
-        return response_body, 200     
+        return response_body, 200
 
 
 @api.route("/manufacturing_ord", methods['GET','POST'])
@@ -620,14 +620,14 @@ def handle_manufacturing():
         data = request.json
         plan = ManufacturingOrders (recipe_id = data['recipe_id'],
                                     delivery_date = data['delivery_date'],
-                                    qty = data['qty']
+                                    qty = data['qty'],
                                     status = data['status'],
                                     user_id = user_id,) #
-        db.session.add(plan)    
+        db.session.add(plan)
         db.session.commit()
         response_body['results'] = plan.serialize()
         response_body['message'] = 'POST Method Prevision_Line'
-        return response_body, 200 
+        return response_body, 200
 
 
 @api.route("/manufacturing_ord/<int:manufacturing_orders_id>", methods['PUT', 'DELETE'])
@@ -646,7 +646,7 @@ def modify_manufacturing(manufacturing_orders_id):
             db.session.delete(plan)
             db.session.commit()
             response_body['message'] = f'Manufacturing Order {manufacturing_orders_id} del usuario {user_id} ha sido eliminada'
-            return response_body, 200            
+            return response_body, 200
         else:
             response_body['message'] = f'No se ha podido borrar la manufacturing order {manufacturing_orders_id}'
             return response_body, 401
@@ -661,13 +661,13 @@ def modify_manufacturing(manufacturing_orders_id):
         data = request.json
         plan = ManufacturingOrders (recipe_id = data['recipe_id'],
                                     delivery_date = data['delivery_date'],
-                                    qty = data['qty']
+                                    qty = data['qty'],
                                     status = data['status'],
-                                    user_id = user_id,) 
+                                    user_id = user_id,)
         db.session.commit()
         response_body['results'] = plan.serialize()
         response_body['message'] = f'Manufacturing order {manufacturing_orders_id} se ha actualizado con exito'
-        return response_body, 200  
+        return response_body, 200
 
 
 
