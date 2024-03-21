@@ -74,16 +74,30 @@ def register_user():
     access_token = create_access_token(identity = {'user_id': new_user.id, 'rol': new_user.rol})
     response_body['message'] = "User resgistered succesfull"
     response_body['token'] = access_token
-    response_body['user'] = user.serialize()
+    response_body['user'] = new_user.serialize()
     return response_body, 201
 
 
 @api.route('/delivery_notes', methods=['GET', 'POST'])
+@jwt_required()
 def handle_delivery_notes():
     response_body = {}
     results = []
-    if request.method == 'GET':
-        delivery_notes = db.session.query(DeliveryNotes).scalars()
+    # Obtener los datos del token
+    current_user = get_jwt_identity()
+    user_id = current_user['user_id']
+    rol = current_user['rol']
+    if request.method == 'GET': 
+        # Definir si es jefe de compras solo puede ver sus delivery notes y si es admin puede ver todos. 
+        # 'Admin', 'Jefe de Compras', 'Cocinero'
+        if rol == 'Cocinero': 
+            response_body['message'] = 'No tiene permiso'
+            return response_body, 401
+        delivery_notes = []    
+        if rol == 'Jefe de Compras':
+            delivery_notes = db.session.query(DeliveryNotes).filter_by(user_id = user_id).scalars() 
+        if rol == 'Admin':     
+            delivery_notes = db.session.query(DeliveryNotes).scalars()
         response_body['results'] = [row.serialize()for row in delivery_notes]
         response_body['message'] = 'GET delivery_notes'
         return response_body, 200
@@ -104,6 +118,7 @@ def handle_delivery_notes():
 
 
 @api.route('/delivery_note/<int:delivery_note_id>', methods=['PUT', 'DELETE'])
+@jwt_required()
 def modify_delivery_note(delivery_note_id):
     response_body = {}
     results = []
@@ -137,6 +152,7 @@ def modify_delivery_note(delivery_note_id):
 
 
 @api.route("/delivery_note_lines/<int:delivery_note_id>", methods=['GET', 'POST'])
+@jwt_required()
 def handle_delivery_lines(delivery_note_id):
     response_body = {}
     results = []
@@ -193,9 +209,11 @@ def modify_delivery_lines(delivery_note_lines_id):
 
 
 @api.route('/centers', methods=['GET', 'POST'])
+@jwt_required()
 def handle_centers():
     response_body = {}
     results = []
+    # Obtener el rol desde el token
     if request.method == 'GET':
         centers = db.session.query(Centers).scalars()
         response_body['results'] = [row.serialize()for row in centers]
@@ -214,10 +232,13 @@ def handle_centers():
         return response_body, 200
 
 
-@api.route('/centers/<int:center_id>', methods=['PUT', 'DELETE'])
+@api.route('/centers/<int:center_id>', methods=['GET', 'PUT', 'DELETE'])
+@jwt_required()
 def modify_center(center_id):
     response_body = {}
     results = []
+    # Obtener el rol desde el token
+    # Falta hacer el GET de un solo centro
     if request.method == 'DELETE':
         line = Centers.query.filter_by(center_id = center_id).first()
         if line:
@@ -245,6 +266,7 @@ def modify_center(center_id):
 
 
 @api.route('/compositions', methods=['GET', 'POST'])
+@jwt_required()  # Esto lo puede hacer cualquiera de los 3.
 def handle_compositions():
     response_body = {}
     results = []
@@ -265,6 +287,7 @@ def handle_compositions():
 
 
 @api.route('/compositions/<int:compositions_id>', methods=['PUT', 'DELETE'])
+@jwt_required()
 def modify_compositions(compositions_id):
     response_body = {}
     results = []
@@ -293,6 +316,7 @@ def modify_compositions(compositions_id):
 
 
 @api.route('/composition_lines', methods=['GET', 'POST'])
+@jwt_required()
 def handle_compositions_Line():
     response_body = {}
     results = []
@@ -315,6 +339,7 @@ def handle_compositions_Line():
 
 
 @api.route('/composition_Lines/<int:composition_line_id>', methods=['PUT', 'DELETE'])
+@jwt_required()
 def modify_composition_line(compositions_line_id):
     response_body = {}
     results = []
@@ -345,6 +370,7 @@ def modify_composition_line(compositions_line_id):
 
 
 @api.route('/recipes', methods=['GET', 'POST'])
+@jwt_required()
 def handle_recipes():
     response_body = {}
     results = []
@@ -367,6 +393,7 @@ def handle_recipes():
 
 
 @api.route('/recipes/<int:recipes_id>', methods=['PUT', 'DELETE'])
+@jwt_required()
 def modify_recipes(recipes_id):
     response_body = {}
     results = []
@@ -454,7 +481,7 @@ def modify_line_recipes(line_recipes_id):
         return response_body, 200
 
 
-@api.route("/previsions", methods['GET','POST'])
+@api.route("/previsions", methods=['GET','POST'])
 @jwt_required()
 def handle_previsions():
     response_body = {}
@@ -484,7 +511,7 @@ def handle_previsions():
         return response_body, 200
 
 
-@api.route("/prevision/<int:prevision_id>", methods['PUT', 'DELETE'])
+@api.route("/prevision/<int:prevision_id>", methods=['PUT', 'DELETE'])
 @jwt_required()
 def modify_prevision(prevision_id):
     response_body = {}
@@ -527,7 +554,7 @@ def modify_prevision(prevision_id):
         return response_body, 200
 
 
-@api.route("/prevision_lines", methods['GET','POST'])
+@api.route("/prevision_lines", methods=['GET','POST'])
 @jwt_required()
 def handle_prevision_lines():
     response_body = {}
@@ -559,9 +586,9 @@ def handle_prevision_lines():
         return response_body, 200
 
 
-@api.route("/prevision_line/<int:prevision_lines_id>", methods['PUT', 'DELETE'])
+@api.route("/prevision_line/<int:prevision_lines_id>", methods=['PUT', 'DELETE'])
 @jwt_required()
-def modify_prevision(prevision_lines_id):
+def modify_prevision_line(prevision_lines_id):
     response_body = {}
     results = []
     current_user = get_jwt_identity()
@@ -598,7 +625,7 @@ def modify_prevision(prevision_lines_id):
         return response_body, 200
 
 
-@api.route("/manufacturing_ord", methods['GET','POST'])
+@api.route("/manufacturing_ord", methods=['GET','POST'])
 @jwt_required()
 def handle_manufacturing():
     response_body = {}
@@ -622,7 +649,7 @@ def handle_manufacturing():
                                     delivery_date = data['delivery_date'],
                                     qty = data['qty'],
                                     status = data['status'],
-                                    user_id = user_id,) #
+                                    user_id = user_id,) 
         db.session.add(plan)
         db.session.commit()
         response_body['results'] = plan.serialize()
@@ -630,7 +657,7 @@ def handle_manufacturing():
         return response_body, 200
 
 
-@api.route("/manufacturing_ord/<int:manufacturing_orders_id>", methods['PUT', 'DELETE'])
+@api.route("/manufacturing_ord/<int:manufacturing_orders_id>", methods=['PUT', 'DELETE'])
 @jwt_required()
 def modify_manufacturing(manufacturing_orders_id):
     response_body = {}
