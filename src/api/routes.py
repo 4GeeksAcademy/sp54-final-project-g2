@@ -95,9 +95,9 @@ def handle_delivery_notes():
             return response_body, 401
         delivery_notes = []    
         if rol == 'Jefe de Compras':
-            delivery_notes = db.session.query(DeliveryNotes).filter_by(user_id = user_id).scalars() 
+            delivery_notes = db.session.query(DeliveryNotes).filter_by(id = user_id).scalars() 
         if rol == 'Admin':     
-            delivery_notes = db.session.query(DeliveryNotes).scalars()
+            delivery_notes = db.session.query(DeliveryNotes).all()
         response_body['results'] = [row.serialize()for row in delivery_notes]
         response_body['message'] = 'GET delivery_notes'
         return response_body, 200
@@ -109,7 +109,7 @@ def handle_delivery_notes():
                                 sum_totals = data ['sum_totals'],
                                 sum_vat = data['sum_vat'],
                                 status = data ['status'],
-                                user_id = data ['user_id'],)
+                                id = data ['user_id'],)
         db.session.add(line)
         db.session.commit()
         response_body['results'] = line.serialize()
@@ -123,7 +123,7 @@ def modify_delivery_note(delivery_note_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
-        line = delivery_note_id.query.filter_by(delivery_note_id = delivery_note_id).first()
+        line = delivery_note_id.query.filter_by(id = delivery_note_id).first()
         if line:
             db.session.delete(line)
             db.session.commit()
@@ -133,18 +133,18 @@ def modify_delivery_note(delivery_note_id):
             response_body['message'] = f'Could not delete {delivery_note_id}.'
             return response_body, 401
     if request.method == 'PUT':
-        line = delivery_note_id.query.filter_by(delivery_note_id = delivery_note_id).first()
+        line = delivery_note_id.query.filter_by(id = delivery_note_id).first()
         if not line:
             response_body['message'] = f'Not found {delivery_note_id}'
             return response_body, 404
         data = request.json
-        line =  DeliveryNotes  (date = data['date'],
-                                center_id = data ['center_id'],
-                                sum_costs = data ['sum_costs'],
-                                sum_totals = data ['sum_totals'],
-                                sum_vat = data['sum_vat'],
-                                status = data ['status'],
-                                user_id = data ['user_id'],)
+        line.date = data['date']
+        line.center_id = data ['center_id']
+        line.sum_costs = data ['sum_costs']
+        line.sum_totals = data ['sum_totals']
+        line.sum_vat = data['sum_vat']
+        line.status = data ['status']
+        line.user_id = data ['user_id']
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = f'Delivery Note {delivery_note_id} it is OK!'
@@ -157,7 +157,7 @@ def handle_delivery_lines(delivery_note_id):
     response_body = {}
     results = []
     if request.method == 'GET':
-        line = DeliveryNoteLines.query.filter_by(delivery_note_line_id = delivery_note_line_id).scalars()
+        line = DeliveryNoteLines.query.filter_by(id=delivery_note_id).all()
         response_body['results'] = [row.serialize() for row in line]
         response_body['message'] = 'GET Method Delivery Note Line'
         return response_body, 200
@@ -168,7 +168,7 @@ def handle_delivery_lines(delivery_note_id):
                                     total = data['total'],
                                     vat = data['vat'],
                                     recipe_id = data['recipe_id'], # este campo deberia de venir de la tabla Recipes
-                                    delivery_note_id = data['delivery_note_id'],) # este campo deberia de venir de la tabla DeliveryNotes
+                                    id = data['delivery_note_id'],) # este campo deberia de venir de la tabla DeliveryNotes
         db.session.add(line)
         db.session.commit()
         response_body['results'] = line.serialize()
@@ -182,9 +182,9 @@ def modify_delivery_lines(delivery_note_lines_id):
     response_body = {}
     results = []
     current_user = get_jwt_identity()
-    user_id = current_user['user_id']
+    # user_id = current_user['user_id']
     if request.method == 'DELETE':
-        line = delivery_note_lines_id.query.filter_by(user_id = user_id, delivery_note_lines_id = delivery_note_lines_id).first()
+        line = delivery_note_lines_id.query.filter_by(id = delivery_note_lines_id).first()
         if line:
             db.session.delete(line)
             db.session.commit()
@@ -194,14 +194,14 @@ def modify_delivery_lines(delivery_note_lines_id):
             response_body['message'] = f'No se ha podido borrar la linea {delivery_note_line_id}'
             return response_body, 401
     if request.method == 'PUT':
-        line = DeliveryNoteLines.query.filter_by(user_id = user_id, delivery_note_lines_id = delivery_note_lines_id).first()
+        line = DeliveryNoteLines.query.filter_by(id = user_id, delivery_note_lines_id = delivery_note_lines_id).first()
         if not line:
             response_body['message'] = f'No se ha encontrado la linea {delivery_note_line_id}'
             return response_body, 404
         data = request.json
-        line = DeliveryNoteLines   (qty = data['qty'],
-                                    total = data['total'],
-                                    vat = data['vat'],)
+        line.qty = data['qty']
+        line.total = data['total']
+        line.vat = data['vat']
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = f'Delivery Note Line {delivery_note_line_id} se ha actualizado con exito'
@@ -255,10 +255,10 @@ def modify_center(center_id):
             response_body['message'] = f'Not found {center_id}'
             return response_body, 404
         data = request.json
-        line = Centers (name = data['name'],
-                        address = data['address'],
-                        manager = data['manager'],
-                        phone = data['phone'],)
+        line.name = data['name']
+        line.address = data['address']
+        line.manager = data['manager']
+        line.phone = data['phone']
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = f'Center {center_id} it is OK!'
@@ -271,7 +271,7 @@ def handle_compositions():
     response_body = {}
     results = []
     if request.method == 'GET':
-        compositions = db.session.query(Compositions).scalars()
+        compositions = db.session.query(Compositions).all()
         response_body['results'] = [row.serialize()for row in compositions]
         response_body['message'] = 'GET compositions'
         return response_body, 200
@@ -292,7 +292,7 @@ def modify_compositions(compositions_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
-        line = Compositions.query.filter_by(compositions_id = compositions_id).first()
+        line = Compositions.query.filter_by(id = compositions_id).first()
         if line:
             db.session.delete(line)
             db.session.commit()
@@ -302,13 +302,13 @@ def modify_compositions(compositions_id):
             response_body['message'] = f'Could not delete {compositions_id}.'
             return response_body, 401
     if request.method == 'PUT':
-        line = Compositions.query.filter_by(compositions_id = compositions_id).first()
+        line = Compositions.query.filter_by(id = compositions_id).first()
         if not line:
             response_body['message'] = f'Not found {compositions_id}'
             return response_body, 404
         data = request.json
-        line = Compositions(name = data['name'],
-                            cost = data['cost'],)
+        line.name = data['name']
+        line.cost = data['cost']
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = f'Compositions {compositions_id} it is OK!'
@@ -344,7 +344,7 @@ def modify_composition_line(compositions_line_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
-        line = CompositionLines.query.filter_by(composition_line_id = composition_line_id).first()
+        line = CompositionLines.query.filter_by(id = composition_line_id).first()
         if line:
             db.session.delete(line)
             db.session.commit()
@@ -354,15 +354,15 @@ def modify_composition_line(compositions_line_id):
             response_body['message'] = f'Could not delete {composition_line_id}.'
             return response_body, 401
     if request.method == 'PUT':
-        line = CompositionLines.query.filter_by(composition_line_id = composition_line_id).first()
+        line = CompositionLines.query.filter_by(id = composition_line_id).first()
         if not line:
             response_body['message'] = f'Not found {composition_line_id}'
             return response_body, 404
         data = request.json
-        line = CompositionLines(recipe_id = data['recipe_id'],
-                                units_recipe = data['units_recipe'],
-                                cost_unit_line = data['cost_unit_line'],
-                                composition_id = data['composition_id'],)
+        line.recipe_id = data['recipe_id']
+        line.units_recipe = data['units_recipe']
+        line.cost_unit_line = data['cost_unit_line']
+        line.composition_id = data['composition_id']
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = f'Compositions Line {composition_line_id} it is OK!'
@@ -375,7 +375,7 @@ def handle_recipes():
     response_body = {}
     results = []
     if request.method == 'GET':
-        recipes = db.session.query(Recipes).scalars()
+        recipes = db.session.query(Recipes).all()
         response_body['results'] = [row.serialize()for row in recipes]
         response_body['message'] = 'GET Recipes'
         return response_body, 200
@@ -389,7 +389,7 @@ def handle_recipes():
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = 'POST Method Recipes'
-        return response_body, 200
+        return response_body, 201
 
 
 @api.route('/recipes/<int:recipes_id>', methods=['PUT', 'DELETE'])
@@ -398,7 +398,7 @@ def modify_recipes(recipes_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
-        line = Recipes.query.filter_by(recipes_id = recipes_id).first()
+        line = Recipes.query.filter_by(id = recipes_id).first()
         if line:
             db.session.delete(line)
             db.session.commit()
@@ -408,16 +408,17 @@ def modify_recipes(recipes_id):
             response_body['message'] = f'Could not delete {recipes_id}.'
             return response_body, 401
     if request.method == 'PUT':
-        line = Recipes.query.filter_by(recipes_id = recipes_id).first()
+        line = Recipes.query.filter_by(id = recipes_id).first()
         if not line:
             response_body['message'] = f'Not found {recipes_id}'
             return response_body, 404
         data = request.json
-        line = Recipes (name = data['name'],
-                        is_active = data['is_active'],
-                        meals = data ['meals'],
-                        cost_meals = data ['cost_meals'],)
+        line.name = data['name']
+        line.is_active = data['is_active']
+        line.meals = data ['meals']
+        line.cost_meals = data ['cost_meals']
         db.session.commit()
+
         response_body['results'] = line.serialize()
         response_body['message'] = f'Recipes {recipes_id} it is OK!'
         return response_body, 200
@@ -453,7 +454,7 @@ def modify_line_recipes(line_recipes_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
-        line = LineRecipes.query.filter_by(line_recipes_id = line_recipes_id).first()
+        line = LineRecipes.query.filter_by(id = line_recipes_id).first()
         if line:
             db.session.delete(line)
             db.session.commit()
@@ -463,18 +464,18 @@ def modify_line_recipes(line_recipes_id):
             response_body['message'] = f'Could not delete {line_recipes_id}.'
             return response_body, 401
     if request.method == 'PUT':
-        line = LineRecipes.query.filter_by(line_recipes_id = line_recipes_id).first()
+        line = LineRecipes.query.filter_by(id = line_recipes_id).first()
         if not line:
             response_body['message'] = f'Not found {line_recipes_id}'
             return response_body, 404
         data = request.json
-        line = LineRecipes (recipe_id = data['recipe_id'],
-                            reference_id = data['reference_id'],
-                            qty = data ['qty'],
-                            cost = data ['cost'],
-                            total = data ['total'],
-                            units = data ['units'],
-                            cost_unit = data ['cost_unit'],)
+        line.recipe_id = data['recipe_id']
+        line.reference_id = data['reference_id']
+        line.qty = data ['qty']
+        line.cost = data ['cost']
+        line.total = data ['total']
+        line.units = data ['units']
+        line.cost_unit = data ['cost_unit']
         db.session.commit()
         response_body['results'] = line.serialize()
         response_body['message'] = f'Line recipes {line_recipes_id} it is OK!'
@@ -520,14 +521,14 @@ def modify_prevision(prevision_id):
     user_id = current_user['user_id']
     if request.method == 'DELETE':
         # Verificar si hay entradas asociadas en Prevision_lines
-        prevision_lines_count = Prevision_lines.query.filter_by(prevision_id=prevision_id).count()
+        prevision_lines_count = Prevision_lines.query.filter_by(id=prevision_id).count()
         if prevision_lines_count > 0:
             response_body['message'] = f'No se puede borrar la Prevision {prevision_id} mientras tenga entradas en Prevision_lines'
             return response_body, 400
         if user_id is None:
             response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
-        plan = Previsions.query.filter_by(user_id = user_id, prevision_id = prevision_id).first()
+        plan = Previsions.query.filter_by(id = user_id, prevision_id = prevision_id).first()
         if plan:
             db.session.delete(plan)
             db.session.commit()
@@ -540,14 +541,14 @@ def modify_prevision(prevision_id):
         if user_id is None:
             response_body['message'] = 'user_id no proporcionado en los encabezados de la solicitud'
             return response_body, 400
-        plan = Previsions.query.filter_by(user_id = user_id, prevision_id = prevision_id).first()
+        plan = Previsions.query.filter_by(id = user_id, prevision_id = prevision_id).first()
         if not plan:
             response_body['message'] = f'No se ha encontrado la prevision {prevision_id}'
             return response_body, 404
         data = request.json
-        plan = Prevision   (center_id = data['center_id'],
-                            date = data['date'],
-                            user_id = user_id,)
+        plan.center_id = data['center_id']
+        plan.date = data['date']
+        plan.user_id = user_id
         db.session.commit()
         response_body['results'] = plan.serialize()
         response_body['message'] = f'Prevision {prevision_id} se ha actualizado con exito'
@@ -597,7 +598,7 @@ def modify_prevision_line(prevision_lines_id):
         if user_id is None:
             response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
-        planLine = PrevisionLines.query.filter_by(user_id = user_id, prevision_lines_id = prevision_lines_id).first()
+        planLine = PrevisionLines.query.filter_by(id = user_id, prevision_lines_id = prevision_lines_id).first()
         if planLine:
             db.session.delete(planLine)
             db.session.commit()
@@ -610,15 +611,15 @@ def modify_prevision_line(prevision_lines_id):
         if user_id is None:
             response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
-        planLine = PrevisionLines.query.filter_by(user_id = user_id, prevision_lines_id = prevision_lines_id).first()
+        planLine = PrevisionLines.query.filter_by(id = user_id, prevision_lines_id = prevision_lines_id).first()
         if not planLine:
             response_body['message'] = f'No se ha encontrado la prevision line {prevision_lines_id}'
             return response_body, 404
         data = request.json
-        planLine = PrevisionLines ( prevision_id = data['prevision_id'],
-                                    service = data['service'],
-                                    pax_service = data['pax_service'],
-                                    composition_id = data['composition_id'],)
+        planLine.prevision_id = data['prevision_id']
+        planLine.service = data['service']
+        planLine.pax_service = data['pax_service']
+        planLine.composition_id = data['composition_id']
         db.session.commit()
         response_body['results'] = planLine.serialize()
         response_body['message'] = f'Prevision Line {prevision_lines_id} se ha actualizado con exito'
@@ -668,7 +669,7 @@ def modify_manufacturing(manufacturing_orders_id):
         if user_id is None:
             response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
-        plan = ManufacturingOrders.query.filter_by(user_id = user_id, manufacturing_orders_id = manufacturing_orders_id).first()
+        plan = ManufacturingOrders.query.filter_by(id = user_id, manufacturing_orders_id = manufacturing_orders_id).first()
         if plan:
             db.session.delete(plan)
             db.session.commit()
@@ -681,16 +682,16 @@ def modify_manufacturing(manufacturing_orders_id):
         if user_id is None:
             response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
             return response_body, 400
-        plan = manufacturing_orders_id.query.filter_by(user_id = user_id, manufacturing_orders_id = manufacturing_orders_id).first()
+        plan = manufacturing_orders_id.query.filter_by(id = user_id, manufacturing_orders_id = manufacturing_orders_id).first()
         if not plan:
             response_body['message'] = f'No se ha encontrado la manufacturing order {manufacturing_orders_id}'
             return response_body, 404
         data = request.json
-        plan = ManufacturingOrders (recipe_id = data['recipe_id'],
-                                    delivery_date = data['delivery_date'],
-                                    qty = data['qty'],
-                                    status = data['status'],
-                                    user_id = user_id,)
+        plan.recipe_id = data['recipe_id']
+        plan.delivery_date = data['delivery_date']
+        plan.qty = data['qty']
+        plan.status = data['status']
+        plan.user_id = user_id
         db.session.commit()
         response_body['results'] = plan.serialize()
         response_body['message'] = f'Manufacturing order {manufacturing_orders_id} se ha actualizado con exito'
