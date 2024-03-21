@@ -58,7 +58,7 @@ class Compositions(db.Model):
 
 class Recipes(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(20), nullable=False)
+    name = db.Column(db.String(250), nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
     meals = db.Column(db.Integer, nullable=False)
     cost_meals = db.Column(db.Integer, nullable=False)
