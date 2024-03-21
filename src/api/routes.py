@@ -74,7 +74,7 @@ def register_user():
     access_token = create_access_token(identity = {'user_id': new_user.id, 'rol': new_user.rol})
     response_body['message'] = "User resgistered succesfull"
     response_body['token'] = access_token
-    response_body['user'] = user.serialize()
+    response_body['user'] = new_user.serialize()
     return response_body, 201
 
 
@@ -87,7 +87,7 @@ def handle_delivery_notes():
     current_user = get_jwt_identity()
     user_id = current_user['user_id']
     rol = current_user['rol']
-    if request.method == 'GET':
+    if request.method == 'GET': 
         # Definir si es jefe de compras solo puede ver sus delivery notes y si es admin puede ver todos. 
         # 'Admin', 'Jefe de Compras', 'Cocinero'
         if rol == 'Cocinero': 
