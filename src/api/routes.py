@@ -454,7 +454,7 @@ def modify_line_recipes(line_recipes_id):
         return response_body, 200   
 
 
-@api.route("/previsions", methods['GET','POST'])
+@api.route("/previsions", methods=['GET','POST'])
 @jwt_required()
 def handle_previsions():
     response_body = {}
@@ -484,7 +484,7 @@ def handle_previsions():
         return response_body, 200       
 
 
-@api.route("/prevision/<int:prevision_id>", methods['PUT', 'DELETE'])
+@api.route("/prevision/<int:prevision_id>", methods=['PUT', 'DELETE'])
 @jwt_required()
 def modify_prevision(prevision_id):
     response_body = {}
@@ -527,7 +527,7 @@ def modify_prevision(prevision_id):
         return response_body, 200       
 
 
-@api.route("/prevision_lines", methods['GET','POST'])
+@api.route("/prevision_lines", methods=['GET','POST'])
 @jwt_required()
 def handle_prevision_lines():
     response_body = {}
@@ -549,7 +549,7 @@ def handle_prevision_lines():
         data = request.json
         planLine = PrevisionLines ( prevision_id = data['prevision_id'], #este campo lo tiene que heredar
                                     service = data['service'],
-                                    pax_service = data['pax_service']
+                                    pax_service = data['pax_service'],
                                     composition_id = data['composition_id'],
                                     user_id = user_id,)
         db.session.add(planLine)    
@@ -559,9 +559,9 @@ def handle_prevision_lines():
         return response_body, 200       
 
 
-@api.route("/prevision_line/<int:prevision_lines_id>", methods['PUT', 'DELETE'])
+@api.route("/prevision_line/<int:prevision_lines_id>", methods=['PUT', 'DELETE'])
 @jwt_required()
-def modify_prevision(prevision_lines_id):
+def modify_prevision_line(prevision_lines_id):
     response_body = {}
     results = []
     current_user = get_jwt_identity()
@@ -598,7 +598,7 @@ def modify_prevision(prevision_lines_id):
         return response_body, 200     
 
 
-@api.route("/manufacturing_ord", methods['GET','POST'])
+@api.route("/manufacturing_ord", methods=['GET','POST'])
 @jwt_required()
 def handle_manufacturing():
     response_body = {}
@@ -620,9 +620,9 @@ def handle_manufacturing():
         data = request.json
         plan = ManufacturingOrders (recipe_id = data['recipe_id'],
                                     delivery_date = data['delivery_date'],
-                                    qty = data['qty']
+                                    qty = data['qty'],
                                     status = data['status'],
-                                    user_id = user_id,) #
+                                    user_id = user_id,)
         db.session.add(plan)    
         db.session.commit()
         response_body['results'] = plan.serialize()
@@ -630,7 +630,7 @@ def handle_manufacturing():
         return response_body, 200 
 
 
-@api.route("/manufacturing_ord/<int:manufacturing_orders_id>", methods['PUT', 'DELETE'])
+@api.route("/manufacturing_ord/<int:manufacturing_orders_id>", methods=['PUT', 'DELETE'])
 @jwt_required()
 def modify_manufacturing(manufacturing_orders_id):
     response_body = {}
@@ -661,7 +661,7 @@ def modify_manufacturing(manufacturing_orders_id):
         data = request.json
         plan = ManufacturingOrders (recipe_id = data['recipe_id'],
                                     delivery_date = data['delivery_date'],
-                                    qty = data['qty']
+                                    qty = data['qty'],
                                     status = data['status'],
                                     user_id = user_id,) 
         db.session.commit()
