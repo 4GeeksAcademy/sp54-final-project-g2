@@ -117,13 +117,13 @@ def handle_delivery_notes():
         return response_body, 200
 
 
-@api.route('/delivery_note/<int:delivery_note_id>', methods=['PUT', 'DELETE'])
+@api.route('/delivery_notes/<int:delivery_note_id>', methods=['PUT', 'DELETE'])
 @jwt_required()
 def modify_delivery_note(delivery_note_id):
     response_body = {}
     results = []
     if request.method == 'DELETE':
-        line = delivery_note_id.query.filter_by(id = delivery_note_id).first()
+        line = DeliveryNotes.query.filter_by(id = delivery_note_id).first()
         if line:
             db.session.delete(line)
             db.session.commit()
@@ -133,7 +133,7 @@ def modify_delivery_note(delivery_note_id):
             response_body['message'] = f'Could not delete {delivery_note_id}.'
             return response_body, 401
     if request.method == 'PUT':
-        line = delivery_note_id.query.filter_by(id = delivery_note_id).first()
+        line = DeliveryNotes.query.filter_by(id = delivery_note_id).first()
         if not line:
             response_body['message'] = f'Not found {delivery_note_id}'
             return response_body, 404
