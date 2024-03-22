@@ -273,8 +273,8 @@ def handle_compositions():
     results = []
     if request.method == 'GET':
         # TODO: agegar todas las composition_lines
-        compositions = db.session.query(Compositions).all()
-        response_body['results'] = [row.serialize()for row in compositions]
+        compositions = db.session.query(Compositions, CompositionLines).join(CompositionLines, Compositions.id==CompositionLines.composition_id, isouter=True).all()
+        response_body['results'] = [row[0].serialize()for row in compositions]
         response_body['message'] = 'GET compositions'
         return response_body, 200
     if request.method == 'POST':
