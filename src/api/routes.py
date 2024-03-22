@@ -126,7 +126,14 @@ def modify_delivery_note(delivery_note_id):
     results = []
     if request.method == 'GET':
         # TODO: hacer GET para un id que debe incluir los delivery_note_lines
-        pass
+        delivery_note = DeliveryNotes.query.get(delivery_note_id)
+        if delivery_note:
+            delivery_note_data = delivery_note.serialize()
+            delivery_note_data['delivery_note_lines'] = [line.serialize() for line in delivery_note.delivery_note_lines]
+            return jsonify(delivery_note_data), 200
+        else:
+            response_body['message'] = f'Delivery Note {delivery_note_id} not found.'
+            return jsonify(response_body), 404
     if request.method == 'DELETE':
         line = DeliveryNotes.query.filter_by(id = delivery_note_id).first()
         if line:
@@ -272,7 +279,6 @@ def handle_compositions():
     response_body = {}
     results = []
     if request.method == 'GET':
-        # TODO: agegar todas las composition_lines
         compositions = db.session.query(Compositions, CompositionLines).join(CompositionLines, Compositions.id==CompositionLines.composition_id, isouter=True).all()
         response_body['results'] = [row[0].serialize()for row in compositions]
         response_body['message'] = 'GET compositions'
@@ -296,6 +302,12 @@ def modify_compositions(compositions_id):
     if request.method == 'GET':
         # TODO: mostrar una compisitions con todas sus lineas
         pass
+     # No se como hacer la lógica para que de una composición salagan todas las lines.
+    """if request.method == 'GET':
+        compositions = db.session.query(Compositions, CompositionLines).join(CompositionLines, Compositions.id==CompositionLines.composition_id, isouter=True).all()
+        response_body['results'] = [row[0].serialize()for row in composition]
+        response_body['message'] = 'GET '
+        return response_body, 200"""
     if request.method == 'DELETE':
         line = Compositions.query.filter_by(id = compositions_id).first()
         if line:
@@ -405,8 +417,10 @@ def modify_recipes(recipes_id):
     response_body = {}
     results = []
     if request.method == 'GET':
-        # TODO: mostrar una recipe con todas sus lineas
-        pass
+        recipes = db.session.query(Recipes, LineRecipes).join(LineRecipes, Recipes.id==LineRecipess.recipes_id, isouter=True).all()
+        response_body['results'] = [row[0].serialize()for row in recipes]
+        response_body['message'] = 'GET '
+        return response_body, 200
     if request.method == 'DELETE':
         line = Recipes.query.filter_by(id = recipes_id).first()
         if line:
