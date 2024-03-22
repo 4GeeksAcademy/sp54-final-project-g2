@@ -9,6 +9,7 @@ from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from dotenv import load_dotenv
+import os
 
 
 load_dotenv()
@@ -870,7 +871,139 @@ def handle_supplier():
         else:
             response_body['message'] = 'Error con los datos del proveedor'
             return response_body, 500
-            
+
+
+@api.route("/references", methods=['GET'])
+@jwt_required()
+def handle_references():
+    response_body = {}
+    current_user = get_jwt_identity()
+    user_id = current_user['user_id']
+    center_id = current_user['center_id']
+    if user_id is None:
+        response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
+        return response_body, 400
+    if center_id == 2:
+        payload = json.dumps({"client_id": os.getenv("CLIENT_COB"), "client_secret": os.getenv("SECRET_COB")})
+        response = requests.request("POST", os.getenv("URL_GS") , headers=headers, data=payload)
+        if response.status_code == 200:
+            json_response = response.json()
+            access_token = json_response.get("access_token")
+            headers = {'Authorization': f'Bearer {access_token}'}
+            response = requests.get(os.getenv("URL_GS_BS") + 'v1/product/purchases', headers=headers)
+            # Almacenar las referencias de la respuesta JSON en la base de datos
+            json_data = response.json()
+            references = json_data.get("references", [])
+            new_references = []
+            for reference_data in references:
+                # Verificar si la referencia ya existe en la base de datos
+                if not References.query.filter_by(id=reference_data['id']).first():
+                    # Si no existe, crea una nueva referencia y agrégala a la lista de nuevas referencias
+                    new_references = References(id=reference_data['id'],
+                                                name=reference_data['name'],
+                                                reference=reference_data['reference'],
+                                                categoryId=reference_data['categoryId'],
+                                                familyId=reference_data['familyId'],
+                                                typeId=reference_data['typeId'],
+                                                subtypeId=reference_data['subtypeId'],
+                                                masureUnitId=reference_data['masureUnitId'],
+                                                masurePriceLastPurchase=reference_data['masurePriceLastPurchase'],
+                                                masurePriceAverage=reference_data['masurePriceAverage'],
+                                                displayUnitId=reference_data['displayUnitId'],
+                                                equivalenceBetweeenMeasureAndDisplay=reference_data['equivalenceBetweeenMeasureAndDisplay'],
+                                                active=reference_data['active'],
+                                                creationDate=reference_data['creationDate'],
+                                                modificationDate=reference_data['modificationData'])
+                    new_references.append(new_reference)
+            # Almacena solo las nuevas referencias en la base de datos
+            db.session.add_all(new_references)
+            db.session.commit()
+            response_body['message'] = f'{len(new_references)} referencias nuevas aderidas con exito'
+            return response_body, 200
+        else:
+            response_body['message'] = 'Error con los datos de la referencia'
+            return response_body, 500
+    if center_id == 3:
+        payload = json.dumps({"client_id": os.getenv("CLIENT_PER"), "client_secret": os.getenv("SECRET_PER")})
+        response = requests.request("POST", os.getenv("URL_GS") , headers=headers, data=payload)
+        if response.status_code == 200:
+            json_response = response.json()
+            access_token = json_response.get("access_token")
+            headers = {'Authorization': f'Bearer {access_token}'}
+            response = requests.get(os.getenv("URL_GS_BS") + 'v1/product/purchases', headers=headers)
+            # Almacenar las referencias de la respuesta JSON en la base de datos
+            json_data = response.json()
+            references = json_data.get("references", [])
+            new_references = []
+            for reference_data in references:
+                # Verificar si la referencia ya existe en la base de datos
+                if not References.query.filter_by(id=reference_data['id']).first():
+                    # Si no existe, crea una nueva referencia y agrégala a la lista de nuevas referencias
+                    new_references = References(id=reference_data['id'],
+                                                name=reference_data['name'],
+                                                reference=reference_data['reference'],
+                                                categoryId=reference_data['categoryId'],
+                                                familyId=reference_data['familyId'],
+                                                typeId=reference_data['typeId'],
+                                                subtypeId=reference_data['subtypeId'],
+                                                masureUnitId=reference_data['masureUnitId'],
+                                                masurePriceLastPurchase=reference_data['masurePriceLastPurchase'],
+                                                masurePriceAverage=reference_data['masurePriceAverage'],
+                                                displayUnitId=reference_data['displayUnitId'],
+                                                equivalenceBetweeenMeasureAndDisplay=reference_data['equivalenceBetweeenMeasureAndDisplay'],
+                                                active=reference_data['active'],
+                                                creationDate=reference_data['creationDate'],
+                                                modificationDate=reference_data['modificationData'])
+                    new_references.append(new_reference)
+            # Almacena solo las nuevas referencias en la base de datos
+            db.session.add_all(new_references)
+            db.session.commit()
+            response_body['message'] = f'{len(new_references)} referencias nuevas aderidas con exito'
+            return response_body, 200
+        else:
+            response_body['message'] = 'Error con los datos de la referencia'
+            return response_body, 500
+    if center_id == 4:
+        payload = json.dumps({"client_id": os.getenv("CLIENT_PAR"), "client_secret": os.getenv("SECRET_PAR")})
+        response = requests.request("POST", os.getenv("URL_GS") , headers=headers, data=payload)
+        if response.status_code == 200:
+            json_response = response.json()
+            access_token = json_response.get("access_token")
+            headers = {'Authorization': f'Bearer {access_token}'}
+            response = requests.get(os.getenv("URL_GS_BS") + 'v1/product/purchases', headers=headers)
+            # Almacenar las referencias de la respuesta JSON en la base de datos
+            json_data = response.json()
+            references = json_data.get("references", [])
+            new_references = []
+            for reference_data in references:
+                # Verificar si la referencia ya existe en la base de datos
+                if not References.query.filter_by(id=reference_data['id']).first():
+                    # Si no existe, crea una nueva referencia y agrégala a la lista de nuevas referencias
+                    new_references = References(id=reference_data['id'],
+                                                name=reference_data['name'],
+                                                reference=reference_data['reference'],
+                                                categoryId=reference_data['categoryId'],
+                                                familyId=reference_data['familyId'],
+                                                typeId=reference_data['typeId'],
+                                                subtypeId=reference_data['subtypeId'],
+                                                masureUnitId=reference_data['masureUnitId'],
+                                                masurePriceLastPurchase=reference_data['masurePriceLastPurchase'],
+                                                masurePriceAverage=reference_data['masurePriceAverage'],
+                                                displayUnitId=reference_data['displayUnitId'],
+                                                equivalenceBetweeenMeasureAndDisplay=reference_data['equivalenceBetweeenMeasureAndDisplay'],
+                                                active=reference_data['active'],
+                                                creationDate=reference_data['creationDate'],
+                                                modificationDate=reference_data['modificationData'])
+                    new_references.append(new_reference)
+            # Almacena solo las nuevas referencias en la base de datos
+            db.session.add_all(new_references)
+            db.session.commit()
+            response_body['message'] = f'{len(new_references)} referencias nuevas aderidas con exito'
+            return response_body, 200
+        else:
+            response_body['message'] = 'Error con los datos de la referencia'
+            return response_body, 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
