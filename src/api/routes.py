@@ -103,13 +103,13 @@ def handle_delivery_notes():
         return response_body, 200
     if request.method == 'POST':
         data = request.json
-        line =  DeliveryNotes  (date = data['date'],
-                                center_id = data ['center_id'],
-                                sum_costs = data ['sum_costs'],
-                                sum_totals = data ['sum_totals'],
-                                sum_vat = data['sum_vat'],
-                                status = data ['status'],
-                                id = data ['user_id'],)
+        line = DeliveryNotes(date = data['date'],
+                             center_id = data ['center_id'],
+                             sum_costs = data ['sum_costs'],
+                             sum_totals = data ['sum_totals'],
+                             sum_vat = data['sum_vat'],
+                             status = data ['status'],
+                             user_id = data ['user_id'],)
         db.session.add(line)
         db.session.commit()
         response_body['results'] = line.serialize()
