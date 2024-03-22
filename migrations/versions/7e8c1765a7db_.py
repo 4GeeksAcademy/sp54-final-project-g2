@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 1201b8a72950
+Revision ID: 7e8c1765a7db
 Revises: 
-Create Date: 2024-03-22 13:32:35.756303
+Create Date: 2024-03-22 20:03:33.977033
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '1201b8a72950'
+revision = '7e8c1765a7db'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -40,11 +40,51 @@ def upgrade():
     sa.Column('cost_meals', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('supliers',
+    op.create_table('references',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=40), nullable=False),
+    sa.Column('reference', sa.String(length=50), nullable=True),
+    sa.Column('categoryId', sa.Integer(), nullable=True),
+    sa.Column('familyId', sa.Integer(), nullable=True),
+    sa.Column('typeId', sa.Integer(), nullable=True),
+    sa.Column('subtypeId', sa.Integer(), nullable=True),
+    sa.Column('masureUnitId', sa.Integer(), nullable=True),
+    sa.Column('masurePriceLastPurchase', sa.Integer(), nullable=True),
+    sa.Column('masurePriceAverage', sa.Integer(), nullable=True),
+    sa.Column('displayUnitId', sa.Integer(), nullable=True),
+    sa.Column('equivalenceBetweeenMeasureAndDisplay', sa.Integer(), nullable=True),
+    sa.Column('active', sa.Boolean(), nullable=True),
+    sa.Column('creationDate', sa.DateTime(), nullable=True),
+    sa.Column('modificationDate', sa.DateTime(), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('suppliers',
+    sa.Column('id', sa.String(), nullable=False),
+    sa.Column('reference', sa.String(length=5), nullable=True),
+    sa.Column('categoryId', sa.String(length=5), nullable=True),
+    sa.Column('subcategoryId', sa.String(length=5), nullable=True),
     sa.Column('name', sa.String(length=20), nullable=False),
-    sa.Column('phone', sa.Integer(), nullable=True),
+    sa.Column('nameRegistered', sa.String(length=20), nullable=False),
+    sa.Column('cif', sa.String(length=20), nullable=True),
+    sa.Column('address', sa.String(length=50), nullable=True),
+    sa.Column('addressAdditional', sa.String(length=50), nullable=True),
+    sa.Column('addressNumber', sa.String(length=50), nullable=True),
+    sa.Column('addressFloor', sa.String(length=50), nullable=True),
+    sa.Column('addressLetter', sa.String(length=50), nullable=True),
+    sa.Column('codePostal', sa.String(length=50), nullable=True),
+    sa.Column('cityCode', sa.String(length=50), nullable=True),
+    sa.Column('cityName', sa.String(length=50), nullable=True),
+    sa.Column('provinceCode', sa.String(length=50), nullable=True),
+    sa.Column('provinceName', sa.String(length=50), nullable=True),
+    sa.Column('phone1', sa.String(length=15), nullable=True),
+    sa.Column('phone2', sa.String(length=15), nullable=True),
+    sa.Column('fax', sa.String(length=15), nullable=True),
+    sa.Column('mobile', sa.String(length=15), nullable=True),
     sa.Column('email', sa.String(length=120), nullable=False),
+    sa.Column('languageCode', sa.String(length=50), nullable=True),
+    sa.Column('active', sa.Boolean(), nullable=True),
+    sa.Column('creationDate', sa.DateTime(), nullable=True),
+    sa.Column('modificationDate', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
@@ -81,6 +121,19 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('line_recipes',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('recipe_id', sa.Integer(), nullable=True),
+    sa.Column('reference_id', sa.Integer(), nullable=True),
+    sa.Column('qty', sa.Integer(), nullable=False),
+    sa.Column('cost', sa.Integer(), nullable=False),
+    sa.Column('total', sa.Integer(), nullable=False),
+    sa.Column('units', sa.Integer(), nullable=False),
+    sa.Column('cost_unit', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['recipe_id'], ['recipes.id'], ),
+    sa.ForeignKeyConstraint(['reference_id'], ['references.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('manufacturing_orders',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('recipe_id', sa.Integer(), nullable=True),
@@ -99,18 +152,6 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('references',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=20), nullable=False),
-    sa.Column('category', sa.Enum('Alimento Fresco', 'Alimento Congelado', 'Conserva', 'Bebida', 'Licor', name='category'), nullable=False),
-    sa.Column('units', sa.Enum('ud', 'gr', 'ml', 'kg', 'l', name='units'), nullable=False),
-    sa.Column('id_suplier', sa.Integer(), nullable=True),
-    sa.Column('cost', sa.Integer(), nullable=False),
-    sa.Column('vat', sa.Enum('4', '10', '21', name='vat'), nullable=False),
-    sa.Column('purchase_format', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['id_suplier'], ['supliers.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
     op.create_table('delivery_note_lines',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('qty', sa.Integer(), nullable=False),
@@ -121,19 +162,6 @@ def upgrade():
     sa.Column('delivery_note_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['delivery_note_id'], ['delivery_notes.id'], ),
     sa.ForeignKeyConstraint(['recipe_id'], ['recipes.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('line_recipes',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('recipe_id', sa.Integer(), nullable=True),
-    sa.Column('reference_id', sa.Integer(), nullable=True),
-    sa.Column('qty', sa.Integer(), nullable=False),
-    sa.Column('cost', sa.Integer(), nullable=False),
-    sa.Column('total', sa.Integer(), nullable=False),
-    sa.Column('units', sa.Integer(), nullable=False),
-    sa.Column('cost_unit', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['recipe_id'], ['recipes.id'], ),
-    sa.ForeignKeyConstraint(['reference_id'], ['references.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('prevision_lines',
@@ -152,15 +180,15 @@ def upgrade():
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('prevision_lines')
-    op.drop_table('line_recipes')
     op.drop_table('delivery_note_lines')
-    op.drop_table('references')
     op.drop_table('previsions')
     op.drop_table('manufacturing_orders')
+    op.drop_table('line_recipes')
     op.drop_table('delivery_notes')
     op.drop_table('composition_lines')
     op.drop_table('users')
-    op.drop_table('supliers')
+    op.drop_table('suppliers')
+    op.drop_table('references')
     op.drop_table('recipes')
     op.drop_table('compositions')
     op.drop_table('centers')

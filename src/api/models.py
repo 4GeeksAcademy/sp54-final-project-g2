@@ -74,31 +74,82 @@ class Recipes(db.Model):
                 'cost_meals': self.cost_meals}
 
 
-class Supliers(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+class Suppliers(db.Model):
+    id = db.Column(db.String, primary_key=True)
+    reference = db.Column(db.String(5))
+    categoryId = db.Column(db.String(5))
+    subcategoryId = db.Column(db.String(5))
     name = db.Column(db.String(20), nullable=False)
-    phone = db.Column(db.Integer)
+    nameRegistered = db.Column(db.String(20), nullable=False)
+    cif = db.Column(db.String(20))
+    address = db.Column(db.String(50))
+    addressAdditional = db.Column(db.String(50))
+    addressNumber = db.Column(db.String(50))
+    addressFloor = db.Column(db.String(50))
+    addressLetter = db.Column(db.String(50))
+    codePostal = db.Column(db.String(50))
+    cityCode = db.Column(db.String(50))
+    cityName = db.Column(db.String(50))
+    provinceCode = db.Column(db.String(50))
+    provinceName = db.Column(db.String(50))
+    phone1 = db.Column(db.String(15))
+    phone2 = db.Column(db.String(15))
+    fax = db.Column(db.String(15))
+    mobile = db.Column(db.String(15))
     email = db.Column(db.String(120), unique=True, nullable=False)
+    languageCode = db.Column(db.String(50))
+    active = db.Column(db.Boolean)
+    creationDate = db.Column(db.DateTime)
+    modificationDate = db.Column(db.DateTime)
 
     def __repr__(self):
         return f'<Suplier: {self.id} - {self.name}>'
 
     def serialize(self):
         return {'id': self.id,
+                'reference': self.reference,
+                'categoryId': self.categoryId,
+                'subcategoryId': self.subcategoryId,
                 'name': self.name,
-                'phone': self.phone,
-                'email': self.email}
+                'nameRegistered': self.nameRegistered,
+                'cif': self.cif,
+                'address': self.address,
+                'addressAdditional': self.addressAdditional,
+                'addressNumber': self.addressNumber,
+                'addressFloor': self.addressFloor,
+                'addressLetter': self.addressLetter,
+                'codePostal': self.codePostal,
+                'cityCode': self.cityCode,
+                'cityName': self.cityName,
+                'provinceCode': self.provinceCode,
+                'provinceName': self.provinceName,
+                'phone1': self.phone1,
+                'phone2': self.phone2,
+                'fax': self.fax,
+                'mobile': self.mobile,
+                'email': self.email,
+                'languageCode': self.languageCode,
+                'active': self.active,
+                'creationDate': self.creationDate,
+                'modificationDate': self.modificationDate}
 
 
 class References(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(20), nullable=False)
-    category = db.Column(db.Enum('Alimento Fresco', 'Alimento Congelado', 'Conserva', 'Bebida', 'Licor', name="category"), nullable=False)
-    units = db.Column(db.Enum('ud', 'gr', 'ml', 'kg', 'l', name="units"), nullable=False)
-    id_suplier = db.Column(db.Integer, db.ForeignKey('supliers.id'))
-    cost = db.Column(db.Integer, nullable=False)
-    vat = db.Column(db.Enum('4', '10', '21', name="vat"), nullable=False)
-    purchase_format = db.Column(db.Integer)
+    name = db.Column(db.String(40), nullable=False)
+    reference = db.Column(db.String(50))
+    categoryId = db.Column(db.Integer)
+    familyId = db.Column(db.Integer)
+    typeId = db.Column(db.Integer)
+    subtypeId = db.Column(db.Integer)
+    masureUnitId = db.Column(db.Integer)
+    masurePriceLastPurchase = db.Column(db.Integer)
+    masurePriceAverage = db.Column(db.Integer)
+    displayUnitId = db.Column(db.Integer)
+    equivalenceBetweeenMeasureAndDisplay = db.Column(db.Integer)
+    active = db.Column(db.Boolean)
+    creationDate = db.Column(db.DateTime)
+    modificationDate = db.Column(db.DateTime)
 
     def __repr__(self):
         return f'<Reference: {self.id} - {self.name}>'
@@ -106,12 +157,18 @@ class References(db.Model):
     def serialize(self):
         return {'id': self.id,
                 'name': self.name,
-                'category': self.category,
-                'units': self.units,
-                'id_suplier': self.id_suplier,
-                'cost': self.cost,
-                'vat': self.vat,
-                'purchase_format': self.purchase_format}
+                'categoryId': self.categoryId,
+                'familyId': self.familyId,
+                'typeId': self.typeId,
+                'subtypeId': self.subtypeId,
+                'masureUnitId': self.masureUnitId,
+                'masurePriceLastPurchase': self.masurePriceLastPurchase,
+                'masurePriceAverage': self.masurePriceAverage,
+                'displayUnitId': self.displayUnitId,
+                'equivalenceBetweeenMeasureAndDisplay': self.equivalenceBetweeenMeasureAndDisplay,
+                'active': self.active,
+                'creationDate': self.creationDate,
+                'modificationDate': self.modificationDate}
 
 
 class Previsions(db.Model):
