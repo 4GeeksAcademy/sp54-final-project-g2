@@ -95,8 +95,10 @@ def handle_delivery_notes():
             return response_body, 401
         delivery_notes = []    
         if rol == 'Jefe de Compras':
+            # TODO: Falta devolver las lineas de los delivery_notes --> .join()
             delivery_notes = db.session.query(DeliveryNotes).filter_by(id = user_id).scalars() 
-        if rol == 'Admin':     
+        if rol == 'Admin':
+            # TODO: Falta devolver las lineas de los delivery_notes --> .join()
             delivery_notes = db.session.query(DeliveryNotes).all()
         response_body['results'] = [row.serialize()for row in delivery_notes]
         response_body['message'] = 'GET delivery_notes'
@@ -117,11 +119,14 @@ def handle_delivery_notes():
         return response_body, 200
 
 
-@api.route('/delivery_notes/<int:delivery_note_id>', methods=['PUT', 'DELETE'])
+@api.route('/delivery_notes/<int:delivery_note_id>', methods=['GET', 'PUT', 'DELETE'])
 @jwt_required()
 def modify_delivery_note(delivery_note_id):
     response_body = {}
     results = []
+    if request.method == 'GET':
+        # TODO: hacer GET para un id que debe incluir los delivery_note_lines
+        pass
     if request.method == 'DELETE':
         line = DeliveryNotes.query.filter_by(id = delivery_note_id).first()
         if line:
@@ -151,24 +156,20 @@ def modify_delivery_note(delivery_note_id):
         return response_body, 200
 
 
-@api.route("/delivery_note_lines/<int:delivery_note_id>", methods=['GET', 'POST'])
+@api.route("/delivery_note_lines>", methods=['POST'])
 @jwt_required()
-def handle_delivery_lines(delivery_note_id):
+def handle_delivery_lines():
     response_body = {}
     results = []
-    if request.method == 'GET':
-        line = DeliveryNoteLines.query.filter_by(id=delivery_note_id).all()
-        response_body['results'] = [row.serialize() for row in line]
-        response_body['message'] = 'GET Method Delivery Note Line'
-        return response_body, 200
     if request.method == 'POST':
         data = request.json
-        line = DeliveryNoteLines   (qty = data['qty'],
-                                    unit_cost = data['unit_cost'], # este campo deberia de venir de la tabla Recipes
-                                    total = data['total'],
-                                    vat = data['vat'],
-                                    recipe_id = data['recipe_id'], # este campo deberia de venir de la tabla Recipes
-                                    id = data['delivery_note_id'],) # este campo deberia de venir de la tabla DeliveryNotes
+        # BUG: Validar que data tenga todos esas claves que necito
+        line = DeliveryNoteLines(qty = data['qty'],
+                                 unit_cost = data['unit_cost'], # este campo deberia de venir de la tabla Recipes
+                                 total = data['total'],
+                                 vat = data['vat'],
+                                 recipe_id = data['recipe_id'], # este campo deberia de venir de la tabla Recipes
+                                 delivery_note_id = data['delivery_note_id'],) # este campo deberia de venir de la tabla DeliveryNotes
         db.session.add(line)
         db.session.commit()
         response_body['results'] = line.serialize()
@@ -271,6 +272,7 @@ def handle_compositions():
     response_body = {}
     results = []
     if request.method == 'GET':
+        # TODO: agegar todas las composition_lines
         compositions = db.session.query(Compositions).all()
         response_body['results'] = [row.serialize()for row in compositions]
         response_body['message'] = 'GET compositions'
@@ -286,11 +288,14 @@ def handle_compositions():
         return response_body, 200
 
 
-@api.route('/compositions/<int:compositions_id>', methods=['PUT', 'DELETE'])
+@api.route('/compositions/<int:compositions_id>', methods=['GET', 'PUT', 'DELETE'])
 @jwt_required()
 def modify_compositions(compositions_id):
     response_body = {}
     results = []
+    if request.method == 'GET':
+        # TODO: mostrar una compisitions con todas sus lineas
+        pass
     if request.method == 'DELETE':
         line = Compositions.query.filter_by(id = compositions_id).first()
         if line:
@@ -321,6 +326,7 @@ def handle_compositions_Line():
     response_body = {}
     results = []
     if request.method == 'GET':
+        # TODO: Hace falta el GET ?
         compositions = db.session.query(CompositionLines).scalars()
         response_body['results'] = [row.serialize()for row in compositions]
         response_body['message'] = 'GET Composition Line'
@@ -338,7 +344,7 @@ def handle_compositions_Line():
         return response_body, 200
 
 
-@api.route('/composition_Lines/<int:composition_line_id>', methods=['PUT', 'DELETE'])
+@api.route('/composition_lines/<int:composition_line_id>', methods=['PUT', 'DELETE'])
 @jwt_required()
 def modify_composition_line(compositions_line_id):
     response_body = {}
@@ -375,6 +381,7 @@ def handle_recipes():
     response_body = {}
     results = []
     if request.method == 'GET':
+        # TODO: agreaga las lineas del recipe
         recipes = db.session.query(Recipes).all()
         response_body['results'] = [row.serialize()for row in recipes]
         response_body['message'] = 'GET Recipes'
@@ -392,11 +399,14 @@ def handle_recipes():
         return response_body, 201
 
 
-@api.route('/recipes/<int:recipes_id>', methods=['PUT', 'DELETE'])
+@api.route('/recipes/<int:recipes_id>', methods=['GET','PUT', 'DELETE'])
 @jwt_required()
 def modify_recipes(recipes_id):
     response_body = {}
     results = []
+    if request.method == 'GET':
+        # TODO: mostrar una recipe con todas sus lineas
+        pass
     if request.method == 'DELETE':
         line = Recipes.query.filter_by(id = recipes_id).first()
         if line:
@@ -424,15 +434,11 @@ def modify_recipes(recipes_id):
         return response_body, 200
 
 
-@api.route('/line_recipes', methods=['GET', 'POST'])
+@api.route('/line_recipes', methods=['POST'])
 def handle_line_recipe():
     response_body = {}
     results = []
-    if request.method == 'GET':
-        line_recipes = db.session.query(LineRecipes).scalars()
-        response_body['results'] = [row.serialize()for row in line_recipe]
-        response_body['message'] = 'GET line recipe'
-        return response_body, 200
+    # El GET se realiza dentroi de la recipe
     if request.method == 'POST':
         data = request.json
         line = LineRecipes (recipe_id = data['recipe_id'],
