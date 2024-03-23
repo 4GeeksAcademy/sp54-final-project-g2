@@ -4,11 +4,15 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 from flask import Flask, request, jsonify, url_for, Blueprint
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-from api.models import db, Users, Centers, Compositions, Recipes, Supliers, References, Previsions, DeliveryNotes, DeliveryNoteLines, CompositionLines, LineRecipes, ManufacturingOrders
+from api.models import db, Users, Centers, Compositions, Recipes, References, Previsions, DeliveryNotes, DeliveryNoteLines, CompositionLines, LineRecipes, ManufacturingOrders, Suppliers, References
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
+from dotenv import load_dotenv
+import os
 
+
+load_dotenv()
 
 api = Blueprint('api', __name__)
 CORS(api)  # Allow CORS requests to this API
@@ -703,6 +707,302 @@ def modify_manufacturing(manufacturing_orders_id):
         response_body['message'] = f'Manufacturing order {manufacturing_orders_id} se ha actualizado con exito'
         return response_body, 200
 
+
+@api.route("/suppliers", methods=['GET'])
+@jwt_required()
+def handle_supplier():
+    response_body = {}
+    current_user = get_jwt_identity()
+    user_id = current_user['user_id']
+    center_id = current_user['center_id']
+    if user_id is None:
+        response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
+        return response_body, 400
+    if center_id == 2:
+        payload = json.dumps({"client_id": os.getenv("CLIENT_COB"), "client_secret": os.getenv("SECRET_COB")})
+        response = requests.request("POST", os.getenv("URL_GS") , headers=headers, data=payload)
+        if response.status_code == 200:
+            json_response = response.json()
+            access_token = json_response.get("access_token")
+            headers = {'Authorization': f'Bearer {access_token}'}
+            response = requests.get(os.getenv("URL_GS_BS") + 'v1/suppliers', headers=headers)
+            # Almacenar los proveedores de la respuesta JSON en la base de datos
+            json_data = response.json()
+            suppliers = json_data.get("suppliers", [])
+            new_suppliers = []
+            for supplier_data in suppliers:
+                # Verificar si el proveedor ya existe en la base de datos
+                if not Suppliers.query.filter_by(id=supplier_data['id']).first():
+                    # Si no existe, crea una nueva instancia de proveedor y agrégala a la lista de nuevos proveedores
+                    new_supplier = Suppliers   (id=supplier_data['id'],
+                                                reference=supplier_data['reference'],
+                                                categoryId=supplier_data['categoryId'],
+                                                subcategoryId=supplier_data['subcategoryId'],
+                                                name=supplier_data['name'],
+                                                nameRegistered=supplier_data['nameRegistered'],
+                                                cif=supplier_data['cif'],
+                                                address=supplier_data['address'],
+                                                addressAdditional=supplier_data['addressAdditional'],
+                                                addressNumber=supplier_data['addressNumber'],
+                                                addressFloor=supplier_data['addressFloor'],
+                                                addressLetter=supplier_data['addressLetter'],
+                                                codePostal=supplier_data['codePostal'],
+                                                cityCode=supplier_data['cityCode'],
+                                                cityName=supplier_data['cityName'],
+                                                provinceCode=supplier_data['provinceCode'],
+                                                provinceName=supplier_data['provinceName'],
+                                                phone1=supplier_data['phone1'],
+                                                phone2=supplier_data['phone2'],
+                                                fax=supplier_data['fax'],
+                                                mobile=supplier_data['mobile'],
+                                                email=supplier_data['email'],
+                                                languageCode=supplier_data['languageCode'],
+                                                active=supplier_data['active'],
+                                                creationDate=supplier_data['creationDate'],
+                                                modificationDate=supplier_data['modificationDate'])
+                    new_suppliers.append(new_supplier)
+            # Almacena solo los nuevos proveedores en la base de datos
+            db.session.add_all(new_suppliers)
+            db.session.commit()
+            response_body['message'] = f'{len(new_suppliers)} Todos los provvedores nuevos aderidos con exito'
+            return response_body, 200
+        else:
+            response_body['message'] = 'Error con los datos del proveedor'
+            return response_body, 500
+    if center_id == 3:
+        payload = json.dumps({"client_id": os.getenv("CLIENT_PER"), "client_secret": os.getenv("SECRET_PER")})
+        response = requests.request("POST", os.getenv("URL_GS") , headers=headers, data=payload)
+        if response.status_code == 200:
+            json_response = response.json()
+            access_token = json_response.get("access_token")
+            headers = {'Authorization': f'Bearer {access_token}'}
+            response = requests.get(os.getenv("URL_GS_BS") + 'v1/suppliers', headers=headers)
+            # Almacenar los proveedores de la respuesta JSON en la base de datos
+            json_data = response.json()
+            suppliers = json_data.get("suppliers", [])
+            new_suppliers = []
+            for supplier_data in suppliers:
+                # Verificar si el proveedor ya existe en la base de datos
+                if not Suppliers.query.filter_by(id=supplier_data['id']).first():
+                    # Si no existe, crea una nueva instancia de proveedor y agrégala a la lista de nuevos proveedores
+                    new_supplier = Suppliers   (id=supplier_data['id'],
+                                                reference=supplier_data['reference'],
+                                                categoryId=supplier_data['categoryId'],
+                                                subcategoryId=supplier_data['subcategoryId'],
+                                                name=supplier_data['name'],
+                                                nameRegistered=supplier_data['nameRegistered'],
+                                                cif=supplier_data['cif'],
+                                                address=supplier_data['address'],
+                                                addressAdditional=supplier_data['addressAdditional'],
+                                                addressNumber=supplier_data['addressNumber'],
+                                                addressFloor=supplier_data['addressFloor'],
+                                                addressLetter=supplier_data['addressLetter'],
+                                                codePostal=supplier_data['codePostal'],
+                                                cityCode=supplier_data['cityCode'],
+                                                cityName=supplier_data['cityName'],
+                                                provinceCode=supplier_data['provinceCode'],
+                                                provinceName=supplier_data['provinceName'],
+                                                phone1=supplier_data['phone1'],
+                                                phone2=supplier_data['phone2'],
+                                                fax=supplier_data['fax'],
+                                                mobile=supplier_data['mobile'],
+                                                email=supplier_data['email'],
+                                                languageCode=supplier_data['languageCode'],
+                                                active=supplier_data['active'],
+                                                creationDate=supplier_data['creationDate'],
+                                                modificationDate=supplier_data['modificationDate'])
+                    new_suppliers.append(new_supplier)
+            # Almacena solo los nuevos proveedores en la base de datos
+            db.session.add_all(new_suppliers)
+            db.session.commit()
+            response_body['message'] = f'{len(new_suppliers)} Todos los provvedores nuevos aderidos con exito'
+            return response_body, 200
+        else:
+            response_body['message'] = 'Error con los datos del proveedor'
+            return response_body, 500
+    if center_id == 4:
+        payload = json.dumps({"client_id": os.getenv("CLIENT_PAR"), "client_secret": os.getenv("SECRET_PAR")})
+        response = requests.request("POST", os.getenv("URL_GS") , headers=headers, data=payload)
+        if response.status_code == 200:
+            json_response = response.json()
+            access_token = json_response.get("access_token")
+            headers = {'Authorization': f'Bearer {access_token}'}
+            response = requests.get(os.getenv("URL_GS_BS") + 'v1/suppliers', headers=headers)
+            # Almacenar los proveedores de la respuesta JSON en la base de datos
+            json_data = response.json()
+            suppliers = json_data.get("suppliers", [])
+            new_suppliers = []
+            for supplier_data in suppliers:
+                # Verificar si el proveedor ya existe en la base de datos
+                if not Suppliers.query.filter_by(id=supplier_data['id']).first():
+                    # Si no existe, crea una nueva instancia de proveedor y agrégala a la lista de nuevos proveedores
+                    new_supplier = Suppliers   (id=supplier_data['id'],
+                                                reference=supplier_data['reference'],
+                                                categoryId=supplier_data['categoryId'],
+                                                subcategoryId=supplier_data['subcategoryId'],
+                                                name=supplier_data['name'],
+                                                nameRegistered=supplier_data['nameRegistered'],
+                                                cif=supplier_data['cif'],
+                                                address=supplier_data['address'],
+                                                addressAdditional=supplier_data['addressAdditional'],
+                                                addressNumber=supplier_data['addressNumber'],
+                                                addressFloor=supplier_data['addressFloor'],
+                                                addressLetter=supplier_data['addressLetter'],
+                                                codePostal=supplier_data['codePostal'],
+                                                cityCode=supplier_data['cityCode'],
+                                                cityName=supplier_data['cityName'],
+                                                provinceCode=supplier_data['provinceCode'],
+                                                provinceName=supplier_data['provinceName'],
+                                                phone1=supplier_data['phone1'],
+                                                phone2=supplier_data['phone2'],
+                                                fax=supplier_data['fax'],
+                                                mobile=supplier_data['mobile'],
+                                                email=supplier_data['email'],
+                                                languageCode=supplier_data['languageCode'],
+                                                active=supplier_data['active'],
+                                                creationDate=supplier_data['creationDate'],
+                                                modificationDate=supplier_data['modificationDate'])
+                    new_suppliers.append(new_supplier)
+            # Almacena solo los nuevos proveedores en la base de datos
+            db.session.add_all(new_suppliers)
+            db.session.commit()
+            response_body['message'] = f'{len(new_suppliers)} Todos los provvedores nuevos aderidos con exito'
+            return response_body, 200
+        else:
+            response_body['message'] = 'Error con los datos del proveedor'
+            return response_body, 500
+
+
+@api.route("/references", methods=['GET'])
+@jwt_required()
+def handle_references():
+    response_body = {}
+    current_user = get_jwt_identity()
+    user_id = current_user['user_id']
+    center_id = current_user['center_id']
+    if user_id is None:
+        response_body['message'] = 'Usuario no proporcionado en los encabezados de la solicitud'
+        return response_body, 400
+    if center_id == 2:
+        payload = json.dumps({"client_id": os.getenv("CLIENT_COB"), "client_secret": os.getenv("SECRET_COB")})
+        response = requests.request("POST", os.getenv("URL_GS") , headers=headers, data=payload)
+        if response.status_code == 200:
+            json_response = response.json()
+            access_token = json_response.get("access_token")
+            headers = {'Authorization': f'Bearer {access_token}'}
+            response = requests.get(os.getenv("URL_GS_BS") + 'v1/product/purchases', headers=headers)
+            # Almacenar las referencias de la respuesta JSON en la base de datos
+            json_data = response.json()
+            references = json_data.get("references", [])
+            new_references = []
+            for reference_data in references:
+                # Verificar si la referencia ya existe en la base de datos
+                if not References.query.filter_by(id=reference_data['id']).first():
+                    # Si no existe, crea una nueva referencia y agrégala a la lista de nuevas referencias
+                    new_references = References(id=reference_data['id'],
+                                                name=reference_data['name'],
+                                                reference=reference_data['reference'],
+                                                categoryId=reference_data['categoryId'],
+                                                familyId=reference_data['familyId'],
+                                                typeId=reference_data['typeId'],
+                                                subtypeId=reference_data['subtypeId'],
+                                                masureUnitId=reference_data['masureUnitId'],
+                                                masurePriceLastPurchase=reference_data['masurePriceLastPurchase'],
+                                                masurePriceAverage=reference_data['masurePriceAverage'],
+                                                displayUnitId=reference_data['displayUnitId'],
+                                                equivalenceBetweeenMeasureAndDisplay=reference_data['equivalenceBetweeenMeasureAndDisplay'],
+                                                active=reference_data['active'],
+                                                creationDate=reference_data['creationDate'],
+                                                modificationDate=reference_data['modificationData'])
+                    new_references.append(new_reference)
+            # Almacena solo las nuevas referencias en la base de datos
+            db.session.add_all(new_references)
+            db.session.commit()
+            response_body['message'] = f'{len(new_references)} referencias nuevas aderidas con exito'
+            return response_body, 200
+        else:
+            response_body['message'] = 'Error con los datos de la referencia'
+            return response_body, 500
+    if center_id == 3:
+        payload = json.dumps({"client_id": os.getenv("CLIENT_PER"), "client_secret": os.getenv("SECRET_PER")})
+        response = requests.request("POST", os.getenv("URL_GS") , headers=headers, data=payload)
+        if response.status_code == 200:
+            json_response = response.json()
+            access_token = json_response.get("access_token")
+            headers = {'Authorization': f'Bearer {access_token}'}
+            response = requests.get(os.getenv("URL_GS_BS") + 'v1/product/purchases', headers=headers)
+            # Almacenar las referencias de la respuesta JSON en la base de datos
+            json_data = response.json()
+            references = json_data.get("references", [])
+            new_references = []
+            for reference_data in references:
+                # Verificar si la referencia ya existe en la base de datos
+                if not References.query.filter_by(id=reference_data['id']).first():
+                    # Si no existe, crea una nueva referencia y agrégala a la lista de nuevas referencias
+                    new_references = References(id=reference_data['id'],
+                                                name=reference_data['name'],
+                                                reference=reference_data['reference'],
+                                                categoryId=reference_data['categoryId'],
+                                                familyId=reference_data['familyId'],
+                                                typeId=reference_data['typeId'],
+                                                subtypeId=reference_data['subtypeId'],
+                                                masureUnitId=reference_data['masureUnitId'],
+                                                masurePriceLastPurchase=reference_data['masurePriceLastPurchase'],
+                                                masurePriceAverage=reference_data['masurePriceAverage'],
+                                                displayUnitId=reference_data['displayUnitId'],
+                                                equivalenceBetweeenMeasureAndDisplay=reference_data['equivalenceBetweeenMeasureAndDisplay'],
+                                                active=reference_data['active'],
+                                                creationDate=reference_data['creationDate'],
+                                                modificationDate=reference_data['modificationData'])
+                    new_references.append(new_reference)
+            # Almacena solo las nuevas referencias en la base de datos
+            db.session.add_all(new_references)
+            db.session.commit()
+            response_body['message'] = f'{len(new_references)} referencias nuevas aderidas con exito'
+            return response_body, 200
+        else:
+            response_body['message'] = 'Error con los datos de la referencia'
+            return response_body, 500
+    if center_id == 4:
+        payload = json.dumps({"client_id": os.getenv("CLIENT_PAR"), "client_secret": os.getenv("SECRET_PAR")})
+        response = requests.request("POST", os.getenv("URL_GS") , headers=headers, data=payload)
+        if response.status_code == 200:
+            json_response = response.json()
+            access_token = json_response.get("access_token")
+            headers = {'Authorization': f'Bearer {access_token}'}
+            response = requests.get(os.getenv("URL_GS_BS") + 'v1/product/purchases', headers=headers)
+            # Almacenar las referencias de la respuesta JSON en la base de datos
+            json_data = response.json()
+            references = json_data.get("references", [])
+            new_references = []
+            for reference_data in references:
+                # Verificar si la referencia ya existe en la base de datos
+                if not References.query.filter_by(id=reference_data['id']).first():
+                    # Si no existe, crea una nueva referencia y agrégala a la lista de nuevas referencias
+                    new_references = References(id=reference_data['id'],
+                                                name=reference_data['name'],
+                                                reference=reference_data['reference'],
+                                                categoryId=reference_data['categoryId'],
+                                                familyId=reference_data['familyId'],
+                                                typeId=reference_data['typeId'],
+                                                subtypeId=reference_data['subtypeId'],
+                                                masureUnitId=reference_data['masureUnitId'],
+                                                masurePriceLastPurchase=reference_data['masurePriceLastPurchase'],
+                                                masurePriceAverage=reference_data['masurePriceAverage'],
+                                                displayUnitId=reference_data['displayUnitId'],
+                                                equivalenceBetweeenMeasureAndDisplay=reference_data['equivalenceBetweeenMeasureAndDisplay'],
+                                                active=reference_data['active'],
+                                                creationDate=reference_data['creationDate'],
+                                                modificationDate=reference_data['modificationData'])
+                    new_references.append(new_reference)
+            # Almacena solo las nuevas referencias en la base de datos
+            db.session.add_all(new_references)
+            db.session.commit()
+            response_body['message'] = f'{len(new_references)} referencias nuevas aderidas con exito'
+            return response_body, 200
+        else:
+            response_body['message'] = 'Error con los datos de la referencia'
+            return response_body, 500
 
 
 if __name__ == '__main__':

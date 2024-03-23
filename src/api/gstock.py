@@ -9,12 +9,12 @@ load_dotenv()
 
 # Variables ocultas
 url = os.getenv("URL_GS")
-client_id = os.getenv("CLIENT_COB")
-client_secret = os.getenv("SECRET_COB")
+client_id_cob = os.getenv("CLIENT_COB")
+client_secret_cob = os.getenv("SECRET_COB")
 url_base = os.getenv("URL_GS_BS")
 
 # Obtengo el token
-payload = json.dumps({"client_id": client_id, "client_secret": client_secret})
+payload = json.dumps({"client_id": client_id_cob, "client_secret": client_secret_cob})
 headers = {'Content-Type': 'application/json'}
 
 response = requests.request("POST", url , headers=headers, data=payload)
