@@ -129,7 +129,7 @@ def modify_delivery_note(delivery_note_id):
     response_body = {}
     results = []
     if request.method == 'GET':
-        # TODO: hacer GET para un id que debe incluir los delivery_note_lines
+        delivery_note = db.session.query(DeliveryNotes, DeliveryNoteLines).join(DeliveryNoteLines, DeliveryNotes.id==DeliveryNoteLines.delivery_note_id, isouter=True).all()
         delivery_note = DeliveryNotes.query.get(delivery_note_id)
         if delivery_note:
             delivery_note_data = delivery_note.serialize()
@@ -304,14 +304,10 @@ def modify_compositions(compositions_id):
     response_body = {}
     results = []
     if request.method == 'GET':
-        # TODO: mostrar una compisitions con todas sus lineas
-        pass
-     # No se como hacer la lógica para que de una composición salagan todas las lines.
-    """if request.method == 'GET':
         compositions = db.session.query(Compositions, CompositionLines).join(CompositionLines, Compositions.id==CompositionLines.composition_id, isouter=True).all()
         response_body['results'] = [row[0].serialize()for row in composition]
         response_body['message'] = 'GET '
-        return response_body, 200"""
+        return response_body, 200
     if request.method == 'DELETE':
         line = Compositions.query.filter_by(id = compositions_id).first()
         if line:
@@ -336,13 +332,12 @@ def modify_compositions(compositions_id):
         return response_body, 200
 
 
-@api.route('/composition_lines', methods=['GET', 'POST'])
+@api.route('/composition_lines', methods=['POST'])
 @jwt_required()
 def handle_compositions_Line():
     response_body = {}
     results = []
     if request.method == 'GET':
-        # TODO: Hace falta el GET ?
         compositions = db.session.query(CompositionLines).scalars()
         response_body['results'] = [row.serialize()for row in compositions]
         response_body['message'] = 'GET Composition Line'
