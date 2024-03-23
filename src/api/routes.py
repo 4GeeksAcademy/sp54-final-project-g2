@@ -227,7 +227,7 @@ def handle_centers():
     results = []
     # Obtener el rol desde el token
     if request.method == 'GET':
-        centers = db.session.query(Centers).scalars()
+        centers = db.session.query(Centers).all()
         response_body['results'] = [row.serialize()for row in centers]
         response_body['message'] = 'GET centers'
         return response_body, 200
@@ -251,6 +251,11 @@ def modify_center(center_id):
     results = []
     # Obtener el rol desde el token
     # Falta hacer el GET de un solo centro
+    if request.method == 'GET':
+        center = Centers.query.filter_by(id=center_id).first()
+        response_body['results'] = center.serialize()
+        response_body['message'] = 'GET de un solo centro' 
+        return response_body, 200
     if request.method == 'DELETE':
         line = Centers.query.filter_by(center_id = center_id).first()
         if line:
