@@ -10,7 +10,17 @@ import { Footer } from "./component/Footer.jsx";
 import { Home } from "./pages/Home.jsx";
 import { Demo } from "./pages/Demo.jsx";
 import { Single } from "./pages/Single.jsx";
-import {Login} from "./pages/Login.jsx";
+
+import { Login } from "./pages/Login.jsx";
+import { Register } from "./pages/Register.jsx";
+import { Recipes } from "./pages/Recipes.jsx";
+import { Previsions } from "./pages/Previsions.jsx";
+import { DeliveryNotes } from "./pages/DeliveryNotes.jsx";
+import { ManufacturingOrders } from "./pages/ManufacturingOrders.jsx";
+import { Single } from "./pages/Single.jsx";
+import { References } from "./pages/References.jsx";
+import { Suppliers } from "./pages/Suppliers.jsx";
+
 
 
 // Create your first component
@@ -31,6 +41,13 @@ const Layout = () => {
                         <Route element={<Demo />} path="/demo" />
                         <Route element={<Single />} path="/single/:theid" />
                         <Route element={<h1>Not found!</h1>} />
+                        <Route element={<Register />} path="/register" />
+                        <Route element={<Recipes />} path="/recipes" />
+                        <Route element={<Previsions />} path="/previsions" />
+                        <Route element={<DeliveryNotes />} path="/delivery-notes" />
+                        <Route element={<ManufacturingOrders />} path="/manufacturing-orders" />
+                        <Route element={<References />} path="/references" />
+                        <Route element={<Suppliers />} path="/suppliers" />
                     </Routes>
                     <Footer />
                 </ScrollToTop>
