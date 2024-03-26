@@ -9,8 +9,6 @@ import { Footer } from "./component/Footer.jsx";
 // Import custom pages
 import { Home } from "./pages/Home.jsx";
 import { Demo } from "./pages/Demo.jsx";
-import { Single } from "./pages/Single.jsx";
-
 import { Login } from "./pages/Login.jsx";
 import { Register } from "./pages/Register.jsx";
 import { Recipes } from "./pages/Recipes.jsx";
